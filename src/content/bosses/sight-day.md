@@ -5,7 +5,7 @@ date: TODO
 challenge: LUMIO and cognitive diseases. Early detection of attention difficulties.
 bossName: The Drifting Mind
 bossEpithet: Devourer of Attention
-image: /images/bosses/sight-day.webp
+image: /images/bosses/dancer.webp # Dark Souls III art, see /credits
 relic: lumio
 order: 3
 ---

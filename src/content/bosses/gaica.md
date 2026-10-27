@@ -6,7 +6,7 @@ date: TODO
 challenge: TODO(Akrem) — one plain line on the challenge brief (smart AI camera).
 bossName: The Unblinking Warden
 bossEpithet: Watcher Behind the Glass
-image: /images/bosses/gaica.webp
+image: /images/bosses/abyss-watchers.webp # Dark Souls III art, see /credits
 order: 1
 ---
 

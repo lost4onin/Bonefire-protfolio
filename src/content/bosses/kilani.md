@@ -6,7 +6,7 @@ date: TODO
 challenge: TODO(Akrem) — one plain line on the smart green energy platform brief.
 bossName: The Ashen Turbine
 bossEpithet: Hunger of the Grid
-image: /images/bosses/kilani.webp
+image: /images/bosses/yhorm.webp # Dark Souls III art, see /credits
 order: 2
 ---
 

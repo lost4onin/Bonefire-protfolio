@@ -1,0 +1,70 @@
+---
+/**
+ * /credits — third-party assets and their licences. Plain page, zero JS. Linked from the WorldLayout footer.
+ * Data: src/data/credits.ts.
+ */
+import PlainLayout from '@/layouts/PlainLayout.astro';
+import { credits } from '@/data/credits';
+---
+
+<PlainLayout title="Credits" description="Third-party assets used on this site and their licences.">
+  <h1>Credits</h1>
+  <p class="intro">
+    Site design and code by Akrem Medimagh. These assets are the work of others, used with thanks.
+  </p>
+
+  <ul class="list">
+    {
+      credits.map((c) => (
+        <li>
+          <h2>{c.what}</h2>
+          <p>
+            {c.source ? <a href={c.source}>{c.title}</a> : c.title} by{' '}
+            {c.authorUrl ? <a href={c.authorUrl}>{c.author}</a> : c.author}
+          </p>
+          <p class="dim">
+            Licence: {c.licenceUrl ? <a href={c.licenceUrl}>{c.licence}</a> : c.licence}
+          </p>
+          {c.changes && <p class="dim">Changes: {c.changes}</p>}
+        </li>
+      ))
+    }
+  </ul>
+
+  <p><a href="/">← Back to the first flame</a></p>
+</PlainLayout>
+
+<style>
+  h1 {
+    font-family: var(--font-display);
+    font-size: var(--fs-40);
+    color: var(--c-bone);
+  }
+  .intro {
+    margin-top: var(--sp-3);
+    color: var(--c-text-dim);
+  }
+  .list {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-7) 0;
+    display: grid;
+    gap: var(--sp-6);
+  }
+  .list li {
+    border-top: 1px solid var(--c-stone);
+    padding-top: var(--sp-5);
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: var(--fs-20);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-ember);
+    margin-bottom: var(--sp-2);
+  }
+  a {
+    min-height: var(--target);
+    display: inline-flex;
+    align-items: center;
+  }
+</style>

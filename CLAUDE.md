@@ -20,7 +20,7 @@ The audience is **recruiters**. The theme is the hook; the content is the point.
 1. **Recruiter-first.** Name, role, email, CV download and "Skip the journey" (→ `/cv`) are visible on every world page. Projects, contact and CV must be reachable in **< 10 seconds** from any page, on a phone, with sound off.
 2. **Real content is real HTML.** All facts render server-side as semantic HTML (works without JS, crawlable, screen-reader friendly). JS only _enhances_ (3D, transitions, sound, cursor).
 3. **Lore never hides facts.** Every in-world name has its plain label next to it: "Hall of Works · Projects", "Python Master · Python". Never make a recruiter decode the theme.
-4. **Original work only.** No FromSoftware / Round8 assets, logos, fonts, sounds, or verbatim phrases ("YOU DIED", "Bonfire Lit", "Victory Achieved", "Enemy Felled"…). Homage, not copy. Our phrases: "Flame Rekindled", "Vanquished", "Lost in the Fog".
+4. **Original work only.** No FromSoftware / Round8 assets, logos, fonts, sounds, or verbatim phrases ("YOU DIED", "Bonfire Lit", "Victory Achieved", "Enemy Felled"…). Homage, not copy. Our phrases: "Flame Rekindled", "Vanquished", "Lost in the Fog". **Akrem's exception (2026-10-28):** Dark Souls III boss and ring art on the boss/ring cards, and the fan-made bonfire model with its coiled sword, are live by his choice, credited on `/credits` and possibly replaced later. Don't flag these again; anything _new_ that is game-derived still needs his OK. See `docs/DECISIONS.md`.
 5. **Performance budget.** 2D pages ship ~0 KB JS beyond the shared layout. Three.js loads **only** on `/` and `/works` (island, lazy). _Exception being trialled: the 3D gauntlet cursor (desktop only, see "Things in flux")._ Each 3D scene ≤ 1.5 MB of models, ≤ 100k triangles. Lighthouse Perf ≥ 85 (3D pages) / ≥ 95 (others), A11y ≥ 95.
 6. **Accessible by default.** Keyboard reachable, visible focus (ember outline), `prefers-reduced-motion` respected (tokens already collapse durations), touch targets ≥ 44px, contrast ≥ 4.5:1 for body text. Custom cursor only on `(hover: hover) and (pointer: fine)`.
 7. **Never autoplay audio.** Sound starts only after an explicit user choice ("Rest with sound?"). Remember the choice in `localStorage`, wrapped in try/catch.
@@ -45,6 +45,7 @@ npm run preview        # serve the production build
 npm run format         # prettier
 npm run models         # optimise assets-src/models/* → public/models/*.glb + budget report
 npm run models:inspect # budget report for what is already in public/models
+npm run images         # assets-src/{bosses,rings,cursor} → public/images/** + src/data/cursor.ts (manifest in the script)
 ```
 
 ## Project map
@@ -58,13 +59,13 @@ src/
     three/   (M3+) scene modules, loaders, quality tiers
     armoury/icons/ (M8) etched SVG skill icons
   content/   relics/*.md, bosses/*.md                     ← schemas in src/content.config.ts
-  data/      site.ts (identity, bonfires/nav), pilgrim.ts, armoury.ts, tips.ts
-  pages/     index (landing), cv (DONE), lab (style guide), 404
+  data/      site.ts (identity, bonfires/nav), pilgrim.ts, armoury.ts, tips.ts, credits.ts, cursor.ts (generated)
+  pages/     index (landing), cv (DONE), credits, lab (style guide), 404
   styles/    tokens.css (ONLY place for raw values), global.css
-scripts/     optimize-models.mjs, portrait_grade.py
+scripts/     optimize-models.mjs, optimize-images.mjs, portrait_grade.py
 .githooks/   commit-msg (strips AI attribution; enabled by `npm install`)
 .claude/     settings.json (permissions, attribution off), commands/ (custom slash commands)
-assets-src/  raw source files (never served)
+assets-src/  raw source files (never served, committed; LFS for big binaries, ONLY here: Vercel doesn't fetch LFS)
 public/      served as-is: images/, models/, audio/, cv/
 docs/        the plan, design, content, milestones, decisions, references
 ```

@@ -22,7 +22,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "models": "node scripts/optimize-models.mjs",
-    "models:inspect": "node scripts/optimize-models.mjs --inspect-only"
+    "models:inspect": "node scripts/optimize-models.mjs --inspect-only",
+    "images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@fontsource-variable/crimson-pro": "^5.1.0",

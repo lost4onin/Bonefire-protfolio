@@ -4,20 +4,25 @@
  *
  *   npm run models              optimise every .glb/.gltf in assets-src/models
  *   npm run models -- lumio     only files whose name contains "lumio"
+ *   npm run models -- dark_souls_-_bonfire --name bonfire --texture-size 512
+ *                               write public/models/bonfire.glb, textures capped at 512px
  *   npm run models:inspect      report on what is already in public/models (no writes)
  *
  * What it does (gltf-transform "optimize"):
  *   - dedupe, prune, weld, simplify (gently), resample animations
  *   - meshopt geometry compression   → three: GLTFLoader.setMeshoptDecoder(MeshoptDecoder)
  *   - textures → WebP, max 2048px    (KTX2 needs the toktx binary; switch later if needed)
+ *   - spec/gloss materials (KHR_materials_pbrSpecularGlossiness, common in Sketchfab exports)
+ *     are converted to metal/rough first: three.js dropped spec/gloss support in r147
  * Then checks each output against the budget in docs/ASSETS.md and prints a report.
  *
  * FBX / OBJ / BLEND are NOT handled here: export them to .glb from Blender first
  * (File → Export → glTF 2.0, format "glTF Binary", +Y up, apply modifiers). See docs/ASSETS.md.
  */
 import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync, statSync, mkdirSync, existsSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, mkdirSync, existsSync, rmSync } from 'node:fs';
 import { join, basename, extname, relative } from 'node:path';
+import { tmpdir } from 'node:os';
 
 const SRC = 'assets-src/models';
 const OUT = 'public/models';
@@ -27,20 +32,32 @@ const BUDGET = {
 };
 
 const args = process.argv.slice(2);
+const flag = (name) => {
+  const i = args.indexOf(name);
+  return i === -1 ? undefined : args[i + 1];
+};
 const inspectOnly = args.includes('--inspect-only');
-const filter = args.find((a) => !a.startsWith('--'));
-
-const bin = join(
-  'node_modules',
-  '.bin',
-  process.platform === 'win32' ? 'gltf-transform.cmd' : 'gltf-transform',
+const outName = flag('--name');
+const textureSize = flag('--texture-size') ?? '2048';
+const filter = args.find(
+  (a, i) =>
+    !a.startsWith('--') &&
+    !args[i - 1]?.startsWith('--name') &&
+    !args[i - 1]?.startsWith('--texture-size'),
 );
+
+// Run the CLI's JS entry with node directly: spawning the .cmd shim on Windows fails with
+// EINVAL since Node 20.12 (CVE-2024-27980) unless a shell is used.
+const bin = join('node_modules', '@gltf-transform', 'cli', 'bin', 'cli.js');
 if (!existsSync(bin)) {
   console.error('gltf-transform not found. Run `npm install` first.');
   process.exit(1);
 }
 const run = (cmdArgs) =>
-  execFileSync(bin, cmdArgs, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  execFileSync(process.execPath, [bin, ...cmdArgs], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 
 const walk = (dir) =>
   existsSync(dir)
@@ -49,6 +66,15 @@ const walk = (dir) =>
         return statSync(p).isDirectory() ? walk(p) : [p];
       })
     : [];
+
+/** Extensions used by a GLB, read from its JSON chunk. */
+function extensionsUsed(file) {
+  const buf = readFileSync(file);
+  if (buf.readUInt32LE(0) !== 0x46546c67) return [];
+  return (
+    JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString('utf8')).extensionsUsed ?? []
+  );
+}
 
 /**
  * Triangle count read straight from the GLB's JSON chunk (no extra deps).
@@ -118,26 +144,36 @@ if (!sources.length) {
   process.exit(0);
 }
 
+if (outName && sources.length > 1) {
+  console.error(`--name needs exactly one matching source, found ${sources.length}.`);
+  process.exit(1);
+}
+
 let over = false;
 for (const src of sources) {
   const out = join(
     OUT,
-    basename(src, extname(src))
-      .toLowerCase()
-      .replace(/[^a-z0-9-]+/g, '-') + '.glb',
+    (outName ?? basename(src, extname(src))).toLowerCase().replace(/[^a-z0-9-]+/g, '-') + '.glb',
   );
   console.log(`→ ${src}`);
+  let input = src;
+  if (extensionsUsed(src).includes('KHR_materials_pbrSpecularGlossiness')) {
+    input = join(tmpdir(), `metalrough-${basename(src)}`);
+    console.log('   spec/gloss materials → metal/rough');
+    run(['metalrough', src, input]);
+  }
   run([
     'optimize',
-    src,
+    input,
     out,
     '--compress',
     'meshopt',
     '--texture-compress',
     'webp',
     '--texture-size',
-    '2048',
+    textureSize,
   ]);
+  if (input !== src) rmSync(input);
   over = report(out) || over;
 }
 console.log(

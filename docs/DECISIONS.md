@@ -72,3 +72,19 @@ Akrem plans a major UI pass after his models (gauntlet, bonfire, relics) arrive,
 ### 2026-10-27: `Frame` forwards extra attributes like `TextBox`
 
 So a parent's scoped styles on `<Frame class="…">` apply (Astro passes the scope as a `data-astro-cid-*` attribute).
+
+### 2026-10-28: Raw assets committed; Git LFS scoped to `assets-src/`
+
+Raw sources (models, boss/ring art, cursor pack) stay in the repo so the pipeline is reproducible. Big binaries go through LFS, but **only under `assets-src/`**: Vercel doesn't fetch LFS objects, so LFS files in `public/` would deploy as pointer files. Web-ready files are plain git marked `binary`. Also fixed: `* text=auto eol=lf` used to sit last in `.gitattributes` and overrode `-text` on GLBs; it's now first. 40.6 MB of LFS added (two GLBs), well inside the free 1 GB.
+
+### 2026-10-28: Game-derived art is live by Akrem's choice (exception to "Original work only")
+
+Akrem decided to use Dark Souls III boss renders on the hackathon cards and DS3 ring icons on the Armoury rings, and to keep the coiled sword on the bonfire model, as fan homage. All are credited on `/credits` (`src/data/credits.ts`) and may be replaced later; swapping is a data-only change (boss art is named by subject, mapped in frontmatter; rings by skill id in the `JOBS` manifest). Known risk, accepted: a DMCA takedown of the public repo or site; recruiters might see it as unoriginal. Rejected: keeping them source-only and drawing etched SVGs (DESIGN §7) now. The gauntlet cursor pack is fan-made and free to use per its author.
+
+### 2026-10-28: Landing bonfire = "Dark Souls - Bonfire" by UselessViking (CC BY 4.0)
+
+Chosen over "Bonfire / Dark Souls" by Livio Arango: 28k vs 602k triangles, clean separate meshes (stones, ash, bones, skull, blade, hilt, ground), vs try2's sword and baked flame cards in one mesh. Spec/gloss materials converted to metal/rough (three.js dropped spec/gloss in r147); textures at 512px (1.2 MB) because 1024px is 3.1 MB, over budget. Flames and sparks are added in code (M3). Attribution on `/credits`.
+
+### 2026-10-28: `npm run models` runs the gltf-transform CLI through node
+
+Spawning `node_modules/.bin/gltf-transform.cmd` fails with EINVAL on Windows since Node 20.12 (CVE-2024-27980 fix), so the script now runs `@gltf-transform/cli/bin/cli.js` with `process.execPath`. Works on every OS.

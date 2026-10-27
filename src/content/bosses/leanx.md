@@ -6,7 +6,7 @@ date: TODO
 challenge: TODO(Akrem) — one plain line on the industrial management desktop app brief.
 bossName: The Iron Foreman
 bossEpithet: Lord of the Assembly Line
-image: /images/bosses/leanx.webp
+image: /images/bosses/vordt.webp # Dark Souls III art, see /credits
 order: 4
 ---
 
