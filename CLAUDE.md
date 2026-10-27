@@ -5,6 +5,7 @@ a 2nd-year Software Engineering student at INSAT (Tunis) seeking a **summer 2026
 The audience is **recruiters**. The theme is the hook; the content is the point.
 
 > Read this file fully at the start of every session. Then read the doc for the task at hand:
+>
 > - `docs/MILESTONES.md` — **what to build next**, with acceptance criteria (source of truth for progress)
 > - `docs/PLAN.md` — the approved product plan (site map, features, rationale)
 > - `docs/DESIGN.md` — tokens, typography rules, motion, components, voice/lore rules
@@ -17,7 +18,7 @@ The audience is **recruiters**. The theme is the hook; the content is the point.
 ## The non-negotiables
 
 1. **Recruiter-first.** Name, role, email, CV download and "Skip the journey" (→ `/cv`) are visible on every world page. Projects, contact and CV must be reachable in **< 10 seconds** from any page, on a phone, with sound off.
-2. **Real content is real HTML.** All facts render server-side as semantic HTML (works without JS, crawlable, screen-reader friendly). JS only *enhances* (3D, transitions, sound, cursor).
+2. **Real content is real HTML.** All facts render server-side as semantic HTML (works without JS, crawlable, screen-reader friendly). JS only _enhances_ (3D, transitions, sound, cursor).
 3. **Lore never hides facts.** Every in-world name has its plain label next to it: "Hall of Works · Projects", "Python Master · Python". Never make a recruiter decode the theme.
 4. **Original work only.** No FromSoftware / Round8 assets, logos, fonts, sounds, or verbatim phrases ("YOU DIED", "Bonfire Lit", "Victory Achieved", "Enemy Felled"…). Homage, not copy. Our phrases: "Flame Rekindled", "Vanquished", "Lost in the Fog".
 5. **Performance budget.** 2D pages ship ~0 KB JS beyond the shared layout. Three.js loads **only** on `/` and `/works` (island, lazy). Each 3D scene ≤ 1.5 MB of models, ≤ 100k triangles. Lighthouse Perf ≥ 85 (3D pages) / ≥ 95 (others), A11y ≥ 95.
@@ -89,7 +90,7 @@ docs/        the plan, design, content, milestones, decisions, references
   - Never change git identity: no `git config user.*`, no `--author`, no `--global` config.
   - Never bypass hooks (`--no-verify` / `-n`). A `commit-msg` hook in `.githooks/` strips AI attribution as a safety net (enabled by `npm install` via the `prepare` script); don't rely on it, just don't write attribution.
   - `.claude/settings.json` sets `attribution` to empty for commits and PRs; never override it.
-- **Commits:** only when Akrem asks or approves. Conventional style (`feat(m3): …`, `fix: …`, `docs: …`, `chore: …`), imperative, ≤ 72-char subject, body explains *why*. One logical change per commit.
+- **Commits:** only when Akrem asks or approves. Conventional style (`feat(m3): …`, `fix: …`, `docs: …`, `chore: …`), imperative, ≤ 72-char subject, body explains _why_. One logical change per commit.
 - **Push / merge:** Akrem does it (or explicitly asks you to, case by case). Never force-push, never rewrite `main` history.
 - **Branches:** `feat/m<n>-<slug>` per milestone, `fix/<slug>` for fixes. Never commit directly to `main`.
 

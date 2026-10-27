@@ -48,6 +48,7 @@ Early attention difficulties are often noticed late, after a student has already
 ## Victory
 
 - **1st place, Sight Day Congress Technical Challenge** (LUMIO and cognitive diseases).
+
 <!-- TODO(Akrem): metrics — accuracy, latency, users tested, startup status -->
 
 ## Spoils

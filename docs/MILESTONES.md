@@ -56,7 +56,7 @@ Spec: PLAN.md §1, §8 · ASSETS.md budgets · match the `Bonfire2D` silhouette 
 
 - [ ] `components/three/BonfireScene.ts` + `Scene3D.astro` island (loaded with a dynamic `import()` after first paint, only on `/`)
 - [ ] Scene: ring of stones, planted sword, logs, ruined arch/pillars silhouettes, ground plane. Start **procedural / low-poly** (built in code); swap in Akrem's models later via the pipeline
-- [ ] Fire: GPU particles or animated shader sprites (additive blending) + a flickering `PointLight` (the only dynamic light). Embers rising. No fire *model*
+- [ ] Fire: GPU particles or animated shader sprites (additive blending) + a flickering `PointLight` (the only dynamic light). Embers rising. No fire _model_
 - [ ] Atmosphere: `FogExp2` in palette colours, subtle camera breathing/drift, slight parallax on pointer move (desktop only)
 - [ ] Quality tiers (`sceneQuality.ts`): high / low by `hardwareConcurrency`, `deviceMemory`, DPR, and an FPS probe in the first 2s; low = fewer particles, DPR 1, no shadows
 - [ ] Fallback to `Bonfire2D` when: no WebGL, `prefers-reduced-motion`, `saveData`, or low tier + mobile
@@ -153,16 +153,16 @@ Spec: PLAN.md §6 · ASSETS.md → Audio
 
 ### Schedule (2 weeks)
 
-| Day | Milestone |
-|---|---|
-| 1–2 | Content gathering by Akrem (CONTENT.md "Open content") + M1 |
-| 3 | M1 finish, start M2 |
-| 4–5 | M2 + M3 |
-| 6 | M4 |
-| 7 | M5 |
-| 8 | M6 |
-| 9 | M7 + M8 |
-| 10 | M9 |
-| 11 | M10 |
-| 12 | M11 |
-| 13–14 | M12 |
+| Day   | Milestone                                                   |
+| ----- | ----------------------------------------------------------- |
+| 1–2   | Content gathering by Akrem (CONTENT.md "Open content") + M1 |
+| 3     | M1 finish, start M2                                         |
+| 4–5   | M2 + M3                                                     |
+| 6     | M4                                                          |
+| 7     | M5                                                          |
+| 8     | M6                                                          |
+| 9     | M7 + M8                                                     |
+| 10    | M9                                                          |
+| 11    | M10                                                         |
+| 12    | M11                                                         |
+| 13–14 | M12                                                         |

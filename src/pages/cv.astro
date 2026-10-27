@@ -43,7 +43,13 @@ const slotOrder: Slot[] = ['weapon', 'catalyst', 'armour', 'ring'];
   <section>
     <h2>Hackathons</h2>
     <ul class="list">
-      {bosses.map((b) => <li><strong>{b.data.placement}</strong>, {b.data.event}</li>)}
+      {
+        bosses.map((b) => (
+          <li>
+            <strong>{b.data.placement}</strong>, {b.data.event}
+          </li>
+        ))
+      }
     </ul>
   </section>
 

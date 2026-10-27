@@ -30,12 +30,17 @@ const args = process.argv.slice(2);
 const inspectOnly = args.includes('--inspect-only');
 const filter = args.find((a) => !a.startsWith('--'));
 
-const bin = join('node_modules', '.bin', process.platform === 'win32' ? 'gltf-transform.cmd' : 'gltf-transform');
+const bin = join(
+  'node_modules',
+  '.bin',
+  process.platform === 'win32' ? 'gltf-transform.cmd' : 'gltf-transform',
+);
 if (!existsSync(bin)) {
   console.error('gltf-transform not found. Run `npm install` first.');
   process.exit(1);
 }
-const run = (cmdArgs) => execFileSync(bin, cmdArgs, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+const run = (cmdArgs) =>
+  execFileSync(bin, cmdArgs, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 
 const walk = (dir) =>
   existsSync(dir)
@@ -60,12 +65,15 @@ function triangleCount(file) {
     const meshTris = (json.meshes ?? []).map((mesh) =>
       mesh.primitives.reduce((sum, p) => {
         if ((p.mode ?? 4) !== 4) return sum;
-        const count = p.indices !== undefined ? acc[p.indices].count : acc[p.attributes.POSITION].count;
+        const count =
+          p.indices !== undefined ? acc[p.indices].count : acc[p.attributes.POSITION].count;
         return sum + count / 3;
       }, 0),
     );
     const nodes = (json.nodes ?? []).filter((n) => n.mesh !== undefined);
-    return nodes.length ? nodes.reduce((s, n) => s + meshTris[n.mesh], 0) : meshTris.reduce((a, b) => a + b, 0);
+    return nodes.length
+      ? nodes.reduce((s, n) => s + meshTris[n.mesh], 0)
+      : meshTris.reduce((a, b) => a + b, 0);
   } catch {
     return null;
   }
@@ -94,9 +102,13 @@ if (inspectOnly) {
 }
 
 const sources = walk(SRC).filter(
-  (f) => ['.glb', '.gltf'].includes(extname(f).toLowerCase()) && (!filter || basename(f).includes(filter)),
+  (f) =>
+    ['.glb', '.gltf'].includes(extname(f).toLowerCase()) &&
+    (!filter || basename(f).includes(filter)),
 );
-const unsupported = walk(SRC).filter((f) => ['.fbx', '.obj', '.blend'].includes(extname(f).toLowerCase()));
+const unsupported = walk(SRC).filter((f) =>
+  ['.fbx', '.obj', '.blend'].includes(extname(f).toLowerCase()),
+);
 if (unsupported.length) {
   console.log('Skipped (export to .glb from Blender first, see docs/ASSETS.md):');
   unsupported.forEach((f) => console.log('   ' + f));
@@ -108,7 +120,12 @@ if (!sources.length) {
 
 let over = false;
 for (const src of sources) {
-  const out = join(OUT, basename(src, extname(src)).toLowerCase().replace(/[^a-z0-9-]+/g, '-') + '.glb');
+  const out = join(
+    OUT,
+    basename(src, extname(src))
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, '-') + '.glb',
+  );
   console.log(`→ ${src}`);
   run([
     'optimize',
@@ -123,4 +140,8 @@ for (const src of sources) {
   ]);
   over = report(out) || over;
 }
-console.log(over ? '\nSome files exceed the budget. Simplify in Blender or lower --texture-size.' : '\nAll within budget.');
+console.log(
+  over
+    ? '\nSome files exceed the budget. Simplify in Blender or lower --texture-size.'
+    : '\nAll within budget.',
+);

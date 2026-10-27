@@ -122,7 +122,11 @@ export const chronicle = [
 
 /** Oaths tab — communities, framed as covenants. */
 export const oaths = [
-  { name: 'IEEE INSAT Student Branch', covenant: 'Oath of the Circuit', role: 'Computer Society Chapter President' },
+  {
+    name: 'IEEE INSAT Student Branch',
+    covenant: 'Oath of the Circuit',
+    role: 'Computer Society Chapter President',
+  },
   { name: 'ENACTUS', covenant: 'Oath of the Common Good', role: 'Social entrepreneurship' },
   { name: 'THEATRO INSAT', covenant: 'Oath of the Mask', role: 'Theatre' },
 ] as const;
