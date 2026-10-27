@@ -1,0 +1,94 @@
+---
+/**
+ * The First Flame — landing.
+ * STATUS: M0 placeholder. Works and is accessible, but uses the 2D bonfire and a plain
+ * travel list. M2 (loading + intro + travel menu + warp) and M3 (3D scene) replace this.
+ * The 2D bonfire stays as the no-WebGL / reduced-data fallback.
+ */
+import WorldLayout from '@/layouts/WorldLayout.astro';
+import Bonfire2D from '@/components/world/Bonfire2D.astro';
+import TextBox from '@/components/ui/TextBox.astro';
+import { bonfires } from '@/data/site';
+
+const destinations = bonfires.filter((b) => b.id !== 'first-flame');
+---
+
+<WorldLayout fog="normal">
+  <div class="stage">
+    <Bonfire2D size={240} />
+
+    <TextBox as="section" width="md" aria-labelledby="intro-title">
+      <h1 id="intro-title" class="sr-only">The First Flame</h1>
+      <p>
+        A lone flame burns at the edge of the ruins. Rest here, traveller, and learn of the one who
+        keeps it.
+      </p>
+    </TextBox>
+
+    <TextBox as="nav" width="sm" aria-label="Travel between flames" class="travel">
+      <p class="travel-head">Travel</p>
+      <ul>
+        {
+          destinations.map((b) => (
+            <li>
+              <a href={b.href}>
+                <span class="t-name">{b.name}</span>
+                <span class="t-section">{b.section}</span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </TextBox>
+  </div>
+</WorldLayout>
+
+<style>
+  .stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-6);
+    padding-top: var(--sp-6);
+  }
+  .travel {
+    padding: var(--sp-4) 0 0;
+  }
+  .travel-head {
+    padding: 0 var(--sp-5) var(--sp-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-bone);
+  }
+  ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  li a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-4);
+    min-height: 56px;
+    padding: var(--sp-3) var(--sp-5);
+    border-top: var(--stroke) solid rgb(255 255 255 / 0.07);
+    color: var(--c-bone);
+    text-decoration: none;
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  li a:hover,
+  li a:focus-visible {
+    background: rgb(255 170 90 / 0.08);
+  }
+  .t-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-18);
+    letter-spacing: 0.06em;
+  }
+  .t-section {
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+</style>

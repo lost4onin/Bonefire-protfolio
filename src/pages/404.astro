@@ -1,0 +1,36 @@
+---
+/**
+ * 404 — "Lost in the fog". Original wording only (no "YOU DIED" pastiche).
+ * TODO(M9): slow red-to-ember title fade, ambient fog thicker, ESC returns home.
+ */
+import WorldLayout from '@/layouts/WorldLayout.astro';
+import TextBox from '@/components/ui/TextBox.astro';
+import RuneButton from '@/components/ui/RuneButton.astro';
+---
+
+<WorldLayout title="Lost in the fog" fog="thick" noindex>
+  <div class="lost">
+    <h1>Lost in the Fog</h1>
+    <TextBox width="md">
+      <p>No flame burns here. The path you sought has faded, or was never lit.</p>
+    </TextBox>
+    <RuneButton href="/">Return to the first flame</RuneButton>
+  </div>
+</WorldLayout>
+
+<style>
+  .lost {
+    min-height: 70dvh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-6);
+    text-align: center;
+  }
+  h1 {
+    font-size: var(--fs-hero);
+    color: var(--c-ember);
+    text-shadow: 0 0 24px var(--c-ember-glow);
+  }
+</style>

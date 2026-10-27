@@ -1,0 +1,64 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run dev)",
+      "Bash(npm run build)",
+      "Bash(npm run check)",
+      "Bash(npm run preview)",
+      "Bash(npm run format)",
+      "Bash(npm run format:check)",
+      "Bash(npm run models)",
+      "Bash(npm run models:*)",
+      "Bash(npx astro check)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git checkout -b:*)",
+      "Bash(git add:*)"
+    ],
+    "ask": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git merge:*)",
+      "Bash(git rebase:*)",
+      "Bash(git reset:*)",
+      "Bash(vercel:*)",
+      "Bash(npx vercel:*)",
+      "Bash(gh:*)"
+    ],
+    "deny": [
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git config user.name:*)",
+      "Bash(git config user.email:*)",
+      "Bash(git config --global:*)",
+      "Bash(git config core.hooksPath:*)",
+      "Bash(git commit --author:*)",
+      "Bash(git commit --no-verify:*)",
+      "Bash(git commit -n:*)",
+      "Bash(gh repo create:*)",
+      "Bash(gh repo delete:*)",
+      "Bash(vercel link:*)",
+      "Bash(npx vercel link:*)",
+      "Bash(vercel project:*)",
+      "Bash(npx vercel project:*)",
+      "Bash(vercel git:*)",
+      "Bash(npx vercel git:*)",
+      "Bash(vercel --prod:*)",
+      "Bash(npx vercel --prod:*)",
+      "Bash(vercel deploy:*)",
+      "Bash(npx vercel deploy:*)",
+      "Bash(vercel domains:*)",
+      "Bash(npx vercel domains:*)",
+      "Bash(rm -rf assets-src:*)"
+    ]
+  }
+}

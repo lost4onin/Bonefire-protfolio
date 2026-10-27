@@ -1,0 +1,189 @@
+---
+/**
+ * WorldLayout — every in-game page (/, /about, /works, /victories, /armoury, /contact, /404).
+ * Provides: atmosphere (fog/grain/vignette), sword cursor, header (identity + Skip the journey),
+ * footer (seeking status + email + CV), key-prompt bar, main landmark.
+ *
+ * Recruiter rule: name, role, email, CV and "Skip the journey" are visible on EVERY world page.
+ *
+ * Slots:
+ *  - default     → page content (inside <main>)
+ *  - "scene"     → full-bleed background layer (3D canvas, art) behind content
+ *  - "prompts"   → extra <KeyPrompt>s for this page (ESC/M are always present)
+ */
+import BaseLayout from './BaseLayout.astro';
+import Fog from '@/components/world/Fog.astro';
+import SwordCursor from '@/components/world/SwordCursor.astro';
+import KeyPrompt from '@/components/ui/KeyPrompt.astro';
+import { site, recruiterRoute } from '@/data/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+  fog?: 'light' | 'normal' | 'thick';
+  noindex?: boolean;
+  /** hide header/footer chrome (e.g. landing intro before "Rest"). Content stays in the DOM. */
+  quietChrome?: boolean;
+}
+const { title, description, fog = 'normal', noindex, quietChrome = false } = Astro.props;
+---
+
+<BaseLayout title={title} description={description} noindex={noindex}>
+  <slot name="head" slot="head" />
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <Fog density={fog} />
+  <div class="scene-layer"><slot name="scene" /></div>
+
+  <header class:list={['chrome', 'top', { quiet: quietChrome }]}>
+    <a class="id" href="/" aria-label={`${site.name}, home`}>
+      <span class="id-name">{site.name}</span>
+      <span class="id-role">{site.role}</span>
+    </a>
+    <nav aria-label="Shortcuts" class="shortcuts">
+      <a class="skip-journey" href={recruiterRoute.href}>{recruiterRoute.label} →</a>
+    </nav>
+  </header>
+
+  <main id="main" class="content">
+    <slot />
+  </main>
+
+  <footer class:list={['chrome', 'bottom', { quiet: quietChrome }]}>
+    <p class="status">
+      <span class="dot" aria-hidden="true"></span>
+      {site.seeking}
+    </p>
+    <div class="prompts">
+      <slot name="prompts" />
+      <KeyPrompt keys={['M']} label="Travel" />
+    </div>
+    <p class="contact">
+      <a href={`mailto:${site.email}`}>{site.email}</a>
+      <span aria-hidden="true">·</span>
+      <a href={site.links.cv} download>CV (PDF)</a>
+    </p>
+  </footer>
+
+  <SwordCursor />
+</BaseLayout>
+
+<style>
+  .scene-layer {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-world);
+  }
+  .content {
+    position: relative;
+    z-index: var(--z-content);
+    min-height: 100dvh;
+    padding: calc(var(--sp-9) + var(--sp-4)) var(--gutter) calc(var(--sp-9) + var(--sp-4));
+  }
+  .chrome {
+    position: fixed;
+    left: 0;
+    right: 0;
+    z-index: var(--z-chrome);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3) var(--sp-5);
+    padding: var(--sp-5) var(--gutter);
+    transition: opacity var(--dur-fade) var(--ease-out);
+  }
+  .chrome.quiet {
+    opacity: 0.35;
+  }
+  .chrome.quiet:hover,
+  .chrome.quiet:focus-within {
+    opacity: 1;
+  }
+  .top {
+    top: 0;
+    background: linear-gradient(180deg, rgb(6 5 5 / 0.85), transparent);
+  }
+  .bottom {
+    bottom: 0;
+    background: linear-gradient(0deg, rgb(6 5 5 / 0.85), transparent);
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+  .id {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    text-decoration: none;
+    min-height: var(--target);
+    justify-content: center;
+  }
+  .id-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-20);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-bone);
+  }
+  .id-role {
+    font-style: italic;
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+  .skip-journey {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target);
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-ember);
+    text-decoration: none;
+  }
+  .skip-journey:hover {
+    color: var(--c-bone);
+  }
+  .status {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+  }
+  .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-ember);
+    box-shadow: 0 0 8px var(--c-ember);
+    animation: pulse 1.2s ease-in-out infinite alternate;
+  }
+  .prompts {
+    display: flex;
+    gap: var(--sp-5);
+  }
+  .contact {
+    display: flex;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+  }
+  .contact a {
+    color: var(--c-text-dim);
+    min-height: var(--target);
+    display: inline-flex;
+    align-items: center;
+  }
+  .contact a:hover {
+    color: var(--c-bone);
+  }
+  @keyframes pulse {
+    from { opacity: 0.6; }
+    to { opacity: 1; }
+  }
+  @media (max-width: 720px) {
+    .prompts {
+      display: none;
+    }
+    .bottom {
+      padding-top: var(--sp-3);
+      padding-bottom: var(--sp-3);
+    }
+  }
+</style>

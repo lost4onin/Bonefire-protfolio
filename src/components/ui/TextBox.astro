@@ -1,0 +1,55 @@
+---
+/**
+ * The signature black text box: near-opaque black, thin light border, inner double edge.
+ * Used for dialogue, intro text, item descriptions, menus.
+ * `as` lets you render it as a section/dialog/aside for correct semantics.
+ */
+interface Props {
+  as?: 'div' | 'section' | 'aside' | 'article' | 'nav' | 'dialog';
+  label?: string; // optional small ember label above the content (display font)
+  width?: 'sm' | 'md' | 'lg' | 'full';
+  class?: string;
+  [key: string]: unknown;
+}
+const { as: Tag = 'div', label, width = 'md', class: className, ...rest } = Astro.props;
+---
+
+<Tag class:list={['textbox', `w-${width}`, className]} {...rest}>
+  {label && <p class="tb-label">{label}</p>}
+  <slot />
+</Tag>
+
+<style>
+  .textbox {
+    position: relative;
+    margin: 0;
+    padding: var(--sp-5) var(--sp-6);
+    background: var(--c-box);
+    color: var(--c-text);
+    border: var(--stroke) solid var(--c-box-edge);
+    /* inner double edge */
+    box-shadow:
+      inset 0 0 0 4px #070606,
+      inset 0 0 0 5px rgb(255 255 255 / 0.06),
+      0 20px 60px rgb(0 0 0 / 0.6);
+    font-size: var(--fs-20);
+    line-height: var(--lh-body);
+  }
+  .w-sm { width: min(100%, 420px); }
+  .w-md { width: min(100%, 560px); }
+  .w-lg { width: min(100%, 760px); }
+  .w-full { width: 100%; }
+  .tb-label {
+    margin-bottom: var(--sp-2);
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-ember);
+  }
+  @media (max-width: 480px) {
+    .textbox {
+      padding: var(--sp-4) var(--sp-5);
+      font-size: var(--fs-18);
+    }
+  }
+</style>

@@ -1,0 +1,42 @@
+{
+  "name": "bonfire-portfolio",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Akrem Medimagh — Souls-like developer portfolio (The First Flame)",
+  "author": "Akrem Medimagh <akrem.medimagh@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lost4onin/Bonefire-protfolio.git"
+  },
+  "homepage": "https://github.com/lost4onin/Bonefire-protfolio",
+  "engines": {
+    "node": ">=20.3.0"
+  },
+  "scripts": {
+    "prepare": "git config core.hooksPath .githooks || echo \"(not a git repo yet: run npm install again after cloning)\"",
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "models": "node scripts/optimize-models.mjs",
+    "models:inspect": "node scripts/optimize-models.mjs --inspect-only"
+  },
+  "dependencies": {
+    "@fontsource-variable/crimson-pro": "^5.1.0",
+    "@fontsource/im-fell-english-sc": "^5.1.0",
+    "astro": "^5.7.0",
+    "gsap": "^3.12.5",
+    "three": "^0.170.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@gltf-transform/cli": "^4.1.0",
+    "@types/three": "^0.170.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-astro": "^0.14.1",
+    "typescript": "^5.6.3"
+  }
+}

@@ -1,0 +1,29 @@
+#!/bin/sh
+# commit-msg hook: keep Akrem the only author/contributor of this repo.
+# Strips any AI attribution an assistant might add to a commit message:
+#   Co-Authored-By: Claude ... / ...@anthropic.com
+#   "Generated with Claude Code" footers and claude.ai / claude.com links
+# Installed automatically by `npm install` (package.json "prepare" sets core.hooksPath=.githooks).
+
+msg_file="$1"
+tmp_file="${msg_file}.tmp"
+
+grep -v -i \
+  -e '^co-authored-by:.*claude' \
+  -e '^co-authored-by:.*anthropic' \
+  -e 'generated with.*claude' \
+  -e '^claude-session:' \
+  -e 'claude\.ai/code' \
+  -e 'claude\.com/claude-code' \
+  "$msg_file" > "$tmp_file"
+
+# drop trailing blank lines left behind
+awk 'NF {for (i = 0; i < blank; i++) print ""; blank = 0; print; next} {blank++}' "$tmp_file" > "$msg_file"
+rm -f "$tmp_file"
+
+# refuse empty messages after stripping
+if ! grep -q '[^[:space:]]' "$msg_file"; then
+  echo "commit-msg: empty commit message after removing AI attribution." >&2
+  exit 1
+fi
+exit 0

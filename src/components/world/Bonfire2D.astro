@@ -1,0 +1,154 @@
+---
+/**
+ * 2D animated bonfire (SVG + CSS). Ported from the approved prototype
+ * (docs/references/prototype-landing.dc.html).
+ * Used for: the loading screen (small, bottom-left), the no-WebGL fallback on the landing,
+ * and favicon / OG art references. The 3D landing bonfire (M3) should MATCH this silhouette.
+ */
+interface Props {
+  size?: number; // rendered width in px; height = size * 1.125
+  embers?: boolean;
+  sword?: boolean; // the planted sword beside the fire
+  class?: string;
+}
+const { size = 240, embers = true, sword = true, class: className } = Astro.props;
+
+// deterministic pseudo-random embers (same on server and client, no hydration needed)
+const rand = (i: number, n: number) => {
+  const x = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+const emberList = embers
+  ? Array.from({ length: 18 }, (_, i) => ({
+      left: 30 + rand(i, 2) * 40, // % of width
+      size: 2 + rand(i, 1) * 3,
+      dur: 2.6 + rand(i, 3) * 3.2,
+      delay: rand(i, 4) * 4,
+      dx: (rand(i, 5) - 0.5) * 160,
+    }))
+  : [];
+---
+
+<div
+  class:list={['bonfire', className]}
+  style={`--w:${size}px`}
+  role="img"
+  aria-label="A bonfire burning in a ring of stones"
+>
+  <div class="glow" aria-hidden="true"></div>
+  {
+    emberList.map((e) => (
+      <span
+        class="ember"
+        aria-hidden="true"
+        style={`left:${e.left}%;width:${e.size}px;height:${e.size}px;animation-duration:${e.dur}s;animation-delay:${e.delay}s;--dx:${e.dx}px`}
+      />
+    ))
+  }
+  <svg viewBox="0 0 240 270" aria-hidden="true">
+    {
+      sword && (
+        <g>
+          <path d="M46 92 L 60 236" stroke="#8d8a86" stroke-width="5" stroke-linecap="round" />
+          <path d="M46 92 L 60 236" stroke="#c9c4bc" stroke-width="1.5" stroke-linecap="round" opacity=".6" />
+          <path d="M38 118 L 64 114" stroke="#6d6964" stroke-width="5" stroke-linecap="round" />
+          <path d="M51 116 L 44 90" stroke="#3a2a20" stroke-width="5" stroke-linecap="round" />
+          <circle cx="43" cy="86" r="4" fill="#6d6964" />
+        </g>
+      )
+    }
+    <rect x="70" y="214" width="110" height="14" rx="6" fill="#2a1a10" transform="rotate(-14 125 221)"></rect>
+    <rect x="64" y="216" width="112" height="14" rx="6" fill="#1f130b" transform="rotate(16 120 223)"></rect>
+    <g class="flame f1"><path d="M120 34 C 148 88 186 116 176 170 C 170 206 148 228 120 228 C 92 228 70 206 64 170 C 55 120 98 100 120 34 Z" fill="#9c2f0c" opacity=".85"></path></g>
+    <g class="flame f4"><path d="M86 150 C 72 120 78 96 86 76 C 94 110 106 128 100 160 Z" fill="#c4420f"></path></g>
+    <g class="flame f5"><path d="M154 152 C 168 124 164 102 158 84 C 150 114 138 130 142 162 Z" fill="#c4420f"></path></g>
+    <g class="flame f2"><path d="M120 74 C 140 112 164 132 156 174 C 151 204 136 220 120 220 C 104 220 88 204 84 174 C 78 136 106 116 120 74 Z" fill="#ef6a1c"></path></g>
+    <g class="flame f3"><path d="M120 118 C 134 144 146 160 142 186 C 139 206 129 216 120 216 C 111 216 101 206 98 186 C 95 164 110 148 120 118 Z" fill="#ffad45"></path></g>
+    <ellipse class="core" cx="120" cy="200" rx="16" ry="18" fill="#fff1cf"></ellipse>
+    <ellipse cx="72" cy="236" rx="16" ry="9" fill="#2b2826"></ellipse>
+    <ellipse cx="102" cy="242" rx="18" ry="9" fill="#34302d"></ellipse>
+    <ellipse cx="138" cy="242" rx="18" ry="9" fill="#2e2a27"></ellipse>
+    <ellipse cx="168" cy="236" rx="16" ry="9" fill="#34302d"></ellipse>
+    <ellipse cx="120" cy="236" rx="60" ry="5" fill="#ff8a34" opacity=".18"></ellipse>
+  </svg>
+</div>
+
+<style>
+  .bonfire {
+    position: relative;
+    width: var(--w);
+    height: calc(var(--w) * 1.125);
+  }
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .glow {
+    position: absolute;
+    left: 50%;
+    top: 62%;
+    width: 270%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(
+      circle,
+      rgb(255 138 52 / 0.34) 0%,
+      rgb(214 84 24 / 0.16) 28%,
+      rgb(120 40 10 / 0.06) 52%,
+      transparent 70%
+    );
+    transform: translate(-50%, -50%);
+    animation: glow 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .flame {
+    transform-origin: 50% 100%;
+    transform-box: fill-box;
+  }
+  .f1 { animation: flick1 1.7s ease-in-out infinite; }
+  .f2 { animation: flick2 1.1s ease-in-out infinite; }
+  .f3 { animation: flick1 0.8s ease-in-out infinite reverse; }
+  .f4 { animation: flick2 2.3s ease-in-out infinite; }
+  .f5 { animation: flick1 1.3s ease-in-out infinite 0.3s; }
+  .core { animation: core 0.6s ease-in-out infinite alternate; }
+  .ember {
+    position: absolute;
+    bottom: 26%;
+    border-radius: 50%;
+    background: #ffb25c;
+    box-shadow: 0 0 6px 2px rgb(255 140 50 / 0.7);
+    opacity: 0;
+    animation-name: rise;
+    animation-timing-function: ease-out;
+    animation-iteration-count: infinite;
+  }
+  @keyframes flick1 {
+    0%, 100% { transform: scale(1, 1) skewX(0); }
+    25% { transform: scale(0.95, 1.07) skewX(2.5deg); }
+    50% { transform: scale(1.04, 0.94) skewX(-2deg); }
+    75% { transform: scale(0.97, 1.05) skewX(1deg); }
+  }
+  @keyframes flick2 {
+    0%, 100% { transform: scale(1, 1) skewX(0); }
+    30% { transform: scale(1.05, 0.96) skewX(-3deg); }
+    60% { transform: scale(0.94, 1.08) skewX(2deg); }
+  }
+  @keyframes core {
+    from { opacity: 0.75; }
+    to { opacity: 1; }
+  }
+  @keyframes glow {
+    0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+    35% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+    60% { opacity: 0.78; transform: translate(-50%, -50%) scale(0.98); }
+  }
+  @keyframes rise {
+    0% { transform: translate(0, 0) scale(1); opacity: 0; }
+    8% { opacity: 1; }
+    70% { opacity: 0.8; }
+    100% { transform: translate(var(--dx), calc(var(--w) * -1.8)) scale(0.2); opacity: 0; }
+  }
+</style>

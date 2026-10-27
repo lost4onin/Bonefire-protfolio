@@ -1,0 +1,90 @@
+---
+/**
+ * Sword cursor. Desktop only: active when (hover: hover) and (pointer: fine).
+ * Touch devices keep the native behaviour. Persists across view transitions.
+ * Tip = top-left of the SVG (3,3) so the hotspot is exact.
+ * TODO(M2): add a "point" state over links/buttons and the "slash" sound on click (M10).
+ */
+---
+
+<div class="sword" id="sword-cursor" aria-hidden="true" transition:persist>
+  <svg viewBox="0 0 34 34" width="34" height="34">
+    <path d="M3 3 L 22 20 L 20 22 Z" fill="#e9e4da" stroke="#1a1512" stroke-width="1.2" stroke-linejoin="round"></path>
+    <path d="M3 3 L 21 21" stroke="#9a948b" stroke-width=".8"></path>
+    <path d="M17 25 L 25 17" stroke="#1a1512" stroke-width="4.4" stroke-linecap="round"></path>
+    <path d="M17 25 L 25 17" stroke="#b8893f" stroke-width="2.6" stroke-linecap="round"></path>
+    <path d="M22.5 22.5 L 28 28" stroke="#1a1512" stroke-width="3.6" stroke-linecap="round"></path>
+    <path d="M22.5 22.5 L 28 28" stroke="#5a3a24" stroke-width="2" stroke-linecap="round"></path>
+    <circle cx="29.5" cy="29.5" r="2.4" fill="#b8893f" stroke="#1a1512" stroke-width="1"></circle>
+  </svg>
+</div>
+
+<script>
+  const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+
+  function init() {
+    const el = document.getElementById('sword-cursor');
+    if (!el || !fine.matches) return;
+    // re-applied on every page load: view transitions replace <html> attributes
+    document.documentElement.classList.add('has-sword');
+    if (el.dataset.ready) return;
+    el.dataset.ready = '1';
+
+    let x = -100;
+    let y = -100;
+    let raf = 0;
+    const paint = () => {
+      el.style.transform = `translate3d(${x - 3}px, ${y - 3}px, 0)`;
+      raf = 0;
+    };
+    window.addEventListener(
+      'pointermove',
+      (e) => {
+        x = e.clientX;
+        y = e.clientY;
+        if (!raf) raf = requestAnimationFrame(paint);
+      },
+      { passive: true },
+    );
+    window.addEventListener('pointerdown', () => {
+      el.classList.add('slash');
+      setTimeout(() => el.classList.remove('slash'), 180);
+    });
+    document.addEventListener('mouseleave', () => {
+      x = -100;
+      y = -100;
+      paint();
+    });
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+  .sword {
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: var(--z-cursor);
+    pointer-events: none;
+    display: none;
+    transform: translate3d(-100px, -100px, 0);
+  }
+  .sword svg {
+    transform-origin: 3px 3px;
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .sword.slash svg {
+    transform: rotate(-38deg) scale(1.08);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sword {
+      display: block;
+    }
+    :global(html.has-sword),
+    :global(html.has-sword *) {
+      cursor: none !important;
+    }
+  }
+</style>

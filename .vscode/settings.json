@@ -1,0 +1,7 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[astro]": { "editor.defaultFormatter": "astro-build.astro-vscode" },
+  "files.associations": { "*.glsl": "glsl", "*.frag": "glsl", "*.vert": "glsl" },
+  "search.exclude": { "dist": true, ".astro": true, "assets-src": true, "public/models": true }
+}

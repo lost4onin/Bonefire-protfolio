@@ -1,0 +1,57 @@
+---
+/**
+ * Engraved hairline frame with ornamental corners. Wraps panels: item descriptions,
+ * stat columns, boss cards. Corners are pure CSS (no images).
+ */
+interface Props {
+  title?: string; // optional heading in the top rule, Lies of P style
+  class?: string;
+}
+const { title, class: className } = Astro.props;
+---
+
+<div class:list={['frame', className]}>
+  <span class="corner tl" aria-hidden="true"></span>
+  <span class="corner tr" aria-hidden="true"></span>
+  <span class="corner bl" aria-hidden="true"></span>
+  <span class="corner br" aria-hidden="true"></span>
+  {
+    title && (
+      <div class="frame-head">
+        <h2 class="frame-title">{title}</h2>
+      </div>
+    )
+  }
+  <slot />
+</div>
+
+<style>
+  .frame {
+    position: relative;
+    padding: var(--sp-5);
+    border: var(--stroke) solid var(--c-line);
+    background: linear-gradient(180deg, rgb(22 17 13 / 0.55), rgb(6 5 5 / 0.35));
+  }
+  .corner {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--c-ember);
+    border-style: solid;
+    opacity: 0.7;
+  }
+  .tl { top: -1px; left: -1px; border-width: 1px 0 0 1px; }
+  .tr { top: -1px; right: -1px; border-width: 1px 1px 0 0; }
+  .bl { bottom: -1px; left: -1px; border-width: 0 0 1px 1px; }
+  .br { bottom: -1px; right: -1px; border-width: 0 1px 1px 0; }
+  .frame-head {
+    margin: calc(var(--sp-2) * -1) 0 var(--sp-4);
+    padding-bottom: var(--sp-2);
+    border-bottom: var(--stroke) solid var(--c-line-strong);
+  }
+  .frame-title {
+    font-size: var(--fs-20);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-bone);
+  }
+</style>

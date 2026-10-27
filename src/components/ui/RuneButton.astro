@@ -1,0 +1,66 @@
+---
+/**
+ * Primary action. Renders <a> when `href` is set, otherwise <button>.
+ * variant "rune" = framed ember button (one per view), "ghost" = quiet text action.
+ */
+interface Props {
+  href?: string;
+  variant?: 'rune' | 'ghost';
+  type?: 'button' | 'submit';
+  class?: string;
+  [key: string]: unknown;
+}
+const { href, variant = 'rune', type = 'button', class: className, ...rest } = Astro.props;
+const cls = ['btn', variant, className];
+---
+
+{
+  href ? (
+    <a href={href} class:list={cls} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={cls} {...rest}>
+      <slot />
+    </button>
+  )
+}
+
+<style>
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2);
+    min-height: var(--target);
+    padding: 0 var(--sp-5);
+    font-family: var(--font-display);
+    font-size: var(--fs-18);
+    letter-spacing: var(--tracking-display);
+    text-decoration: none;
+    color: var(--c-bone);
+    background: transparent;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+  .rune {
+    border: var(--stroke) solid var(--c-ember);
+  }
+  .rune:hover,
+  .rune:focus-visible {
+    background: rgb(232 168 102 / 0.1);
+    color: var(--c-bone);
+  }
+  .ghost {
+    border: var(--stroke) solid transparent;
+    color: var(--c-text-dim);
+    padding: 0 var(--sp-2);
+  }
+  .ghost:hover,
+  .ghost:focus-visible {
+    color: var(--c-bone);
+  }
+</style>

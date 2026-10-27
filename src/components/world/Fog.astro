@@ -1,0 +1,107 @@
+---
+/**
+ * Fog + film grain + vignette. The shared atmosphere behind every world page.
+ * Pure CSS, no JS. Sits at --z-world, pointer-events: none.
+ * `density` lets a page thin or thicken the fog (the 3D landing uses Three.js fog instead → "light").
+ */
+interface Props {
+  density?: 'light' | 'normal' | 'thick';
+}
+const { density = 'normal' } = Astro.props;
+---
+
+<div class:list={['atmosphere', `density-${density}`]} aria-hidden="true">
+  <div class="fog fog-a"></div>
+  <div class="fog fog-b"></div>
+  <div class="fog fog-c"></div>
+  <div class="vignette"></div>
+  <div class="grain"></div>
+</div>
+
+<style>
+  .atmosphere {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-world);
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .fog {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    will-change: transform;
+  }
+  .fog-a {
+    left: -15%;
+    bottom: 4%;
+    width: 75%;
+    height: 32vh;
+    background: rgb(120 112 104 / 0.1);
+    animation: drift 28s var(--ease-in-out) infinite alternate;
+  }
+  .fog-b {
+    right: -20%;
+    bottom: -4%;
+    width: 80%;
+    height: 38vh;
+    background: rgb(90 84 78 / 0.12);
+    animation: drift 36s var(--ease-in-out) infinite alternate-reverse;
+  }
+  .fog-c {
+    left: 20%;
+    top: 10%;
+    width: 60%;
+    height: 24vh;
+    background: rgb(90 84 78 / 0.05);
+    animation: drift 44s var(--ease-in-out) infinite alternate;
+  }
+  .density-light .fog {
+    opacity: 0.5;
+  }
+  .density-thick .fog {
+    opacity: 1.6;
+  }
+
+  .vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 50% 55%, transparent 40%, rgb(0 0 0 / 0.75) 100%);
+  }
+
+  /* SVG turbulence grain, stepped animation so it flickers like film */
+  .grain {
+    position: absolute;
+    inset: -50%;
+    opacity: 0.07;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    animation: grain 0.9s steps(4) infinite;
+  }
+
+  @keyframes drift {
+    from {
+      transform: translateX(-6%);
+    }
+    to {
+      transform: translateX(8%);
+    }
+  }
+  @keyframes grain {
+    0% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(-3%, 2%);
+    }
+    50% {
+      transform: translate(2%, -3%);
+    }
+    75% {
+      transform: translate(-2%, -1%);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+</style>

@@ -1,0 +1,56 @@
+---
+/**
+ * BaseLayout — <html>/<head> only: meta, fonts, global CSS, view transitions.
+ * Every page goes through WorldLayout (game pages) or PlainLayout (/cv), which wrap this.
+ */
+import '@fontsource/im-fell-english-sc';
+import '@fontsource-variable/crimson-pro';
+import '@fontsource-variable/crimson-pro/wght-italic.css';
+import '@/styles/global.css';
+import { ClientRouter } from 'astro:transitions';
+import { site } from '@/data/site';
+
+interface Props {
+  title?: string; // page title; site name is appended
+  description?: string;
+  ogImage?: string;
+  noindex?: boolean;
+}
+
+const {
+  title,
+  description = `${site.name}, ${site.role}. ${site.tagline}`,
+  ogImage = '/og-image.jpg', // TODO(M11): generate the share card
+  noindex = false,
+} = Astro.props;
+
+const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.role}`;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#060505" />
+    {noindex && <meta name="robots" content="noindex" />}
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(ogImage, Astro.site)} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <ClientRouter fallback="swap" />
+    <slot name="head" />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>

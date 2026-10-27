@@ -1,0 +1,198 @@
+---
+/**
+ * /cv — "Skip the journey". The plain recruiter page. COMPLETE at M0.
+ * Rule: every fact here must be readable in < 10 seconds, with zero JS and zero theme gimmicks.
+ * Data comes from the same sources as the game pages, so the two never drift apart.
+ */
+import PlainLayout from '@/layouts/PlainLayout.astro';
+import { getCollection } from 'astro:content';
+import { site } from '@/data/site';
+import { chronicle, tongues } from '@/data/pilgrim';
+import { skills, slots, type Slot } from '@/data/armoury';
+
+const relics = (await getCollection('relics', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const bosses = (await getCollection('bosses', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const slotOrder: Slot[] = ['weapon', 'catalyst', 'armour', 'ring'];
+---
+
+<PlainLayout title="CV" description={`${site.name}: ${site.summary}`}>
+  <header class="head">
+    <div>
+      <h1>{site.name}</h1>
+      <p class="role">{site.role} · {site.school.split(' — ')[0]}</p>
+      <p class="seeking">{site.seeking}</p>
+    </div>
+    <ul class="links">
+      <li><a href={`mailto:${site.email}`}>{site.email}</a></li>
+      <li><a href={site.links.github} rel="me">GitHub</a></li>
+      <li><a href={site.links.linkedin} rel="me">LinkedIn</a></li>
+      <li><a href={site.links.cv} download class="pdf">Download CV (PDF)</a></li>
+      <li><a href="/">← Enter the world</a></li>
+    </ul>
+  </header>
+
+  <section>
+    <h2>Summary</h2>
+    <p>{site.summary}</p>
+  </section>
+
+  <section>
+    <h2>Hackathons</h2>
+    <ul class="list">
+      {bosses.map((b) => <li><strong>{b.data.placement}</strong>, {b.data.event}</li>)}
+    </ul>
+  </section>
+
+  <section>
+    <h2>Projects</h2>
+    {
+      relics.map((r) => (
+        <article class="item">
+          {/* TODO(M6): once /works/[slug] exists, wrap the title in <a href={`/works/${r.id}`}> */}
+          <h3>{r.data.project}</h3>
+          <p>{r.data.summary}</p>
+          <p class="meta">{r.data.stack.join(' · ')}</p>
+        </article>
+      ))
+    }
+  </section>
+
+  <section>
+    <h2>Experience and education</h2>
+    {
+      chronicle.map((c) => (
+        <article class="item">
+          <h3>
+            {c.title}, {c.where} <span class="when">{c.when}</span>
+          </h3>
+          {c.points.length > 0 && (
+            <ul class="list">
+              {c.points.map((p) => (
+                <li>{p}</li>
+              ))}
+            </ul>
+          )}
+        </article>
+      ))
+    }
+  </section>
+
+  <section>
+    <h2>Skills</h2>
+    <dl class="skills">
+      {
+        slotOrder.map((s) => (
+          <>
+            <dt>{slots[s].plain}</dt>
+            <dd>
+              {skills
+                .filter((k) => k.slot === s)
+                .map((k) => k.label)
+                .join(', ')}
+            </dd>
+          </>
+        ))
+      }
+    </dl>
+  </section>
+
+  <section>
+    <h2>Languages</h2>
+    <p>{tongues.map((t) => `${t.name} (${t.level})`).join(' · ')}</p>
+  </section>
+</PlainLayout>
+
+<style>
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--sp-5);
+    padding-bottom: var(--sp-6);
+    border-bottom: var(--stroke) solid var(--c-line);
+  }
+  h1 {
+    font-size: var(--fs-40);
+  }
+  .role {
+    margin-top: var(--sp-2);
+    color: var(--c-text-dim);
+    font-style: italic;
+  }
+  .seeking {
+    margin-top: var(--sp-3);
+    color: var(--c-ember);
+  }
+  .links {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .links a {
+    display: inline-flex;
+    min-height: 32px;
+    align-items: center;
+  }
+  .pdf {
+    font-weight: 600;
+  }
+  section {
+    padding: var(--sp-6) 0;
+    border-bottom: var(--stroke) solid var(--c-line);
+  }
+  h2 {
+    font-size: var(--fs-24);
+    color: var(--c-ember);
+    margin-bottom: var(--sp-4);
+  }
+  h3 {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--fs-20);
+    letter-spacing: 0;
+    line-height: var(--lh-snug);
+  }
+  .item + .item {
+    margin-top: var(--sp-5);
+  }
+  .item p {
+    margin-top: var(--sp-1);
+  }
+  .meta,
+  .when {
+    color: var(--c-text-dim);
+    font-size: var(--fs-16);
+    font-weight: 400;
+  }
+  .list {
+    margin: var(--sp-2) 0 0;
+    padding-left: 1.2em;
+  }
+  .skills {
+    display: grid;
+    grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+    gap: var(--sp-2) var(--sp-5);
+    margin: 0;
+  }
+  dt {
+    color: var(--c-text-dim);
+  }
+  dd {
+    margin: 0;
+  }
+  @media (max-width: 560px) {
+    .skills {
+      grid-template-columns: 1fr;
+    }
+    dd {
+      margin-bottom: var(--sp-3);
+    }
+  }
+</style>

@@ -1,0 +1,180 @@
+---
+/**
+ * /lab — the living style guide and look-dev sandbox (replaces the canvas mockups).
+ * Every new UI primitive gets a specimen here BEFORE it is used on a page (see CLAUDE.md).
+ * Not linked from anywhere, noindex. In production builds it redirects home (M12 may delete it).
+ */
+import WorldLayout from '@/layouts/WorldLayout.astro';
+import Bonfire2D from '@/components/world/Bonfire2D.astro';
+import TextBox from '@/components/ui/TextBox.astro';
+import RuneButton from '@/components/ui/RuneButton.astro';
+import KeyPrompt from '@/components/ui/KeyPrompt.astro';
+import Frame from '@/components/ui/Frame.astro';
+
+if (import.meta.env.PROD) return Astro.redirect('/');
+
+const colors = [
+  ['--c-void', '#060505', 'page ground'],
+  ['--c-ash', '#16110D', 'raised surface'],
+  ['--c-stone', '#2A221C', 'lines, frames'],
+  ['--c-muted', '#A9A196', 'secondary text'],
+  ['--c-bone', '#F2EDE4', 'primary text'],
+  ['--c-ember', '#E8A866', 'the one accent'],
+];
+---
+
+<WorldLayout title="Lab" noindex fog="light">
+  <div class="lab">
+    <h1>The Lab</h1>
+    <p class="dim">Look-dev sandbox. Tune here, then use on pages.</p>
+
+    <section>
+      <h2 class="label">Palette A · Ash and ember</h2>
+      <div class="swatches">
+        {
+          colors.map(([name, hex, use]) => (
+            <figure>
+              <div class="chip" style={`background:var(${name})`} />
+              <figcaption>
+                <code>{name}</code>
+                <span class="num">{hex}</span>
+                <span class="dim">{use}</span>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Type</h2>
+      <p class="spec-display">Akrem Medimagh</p>
+      <p class="spec-h">Hall of Works</p>
+      <p class="spec-body">
+        A multi-hackathon victor who forges AI that watches the forest for fire. Body text is Crimson
+        Pro at 18px with a 1.55 line height, set no wider than 64 characters.
+      </p>
+      <p class="spec-body"><em>Italic for roles and asides.</em> <span class="num">Technique 16 · 379 / 379</span></p>
+    </section>
+
+    <section>
+      <h2 class="label">Components</h2>
+      <div class="row">
+        <TextBox label="The Hearth">
+          A lone flame burns at the edge of the ruins. Rest here, traveller.
+        </TextBox>
+        <div class="col">
+          <RuneButton>Rest at the flame</RuneButton>
+          <RuneButton variant="ghost">Return to the first flame</RuneButton>
+          <div class="row tight">
+            <KeyPrompt keys={['ESC']} label="Back" />
+            <KeyPrompt keys={['Q', 'E']} label="Switch tab" />
+            <KeyPrompt keys={['M']} label="Travel" />
+          </div>
+        </div>
+      </div>
+      <div class="stats">
+        <Frame title="Default Abilities">
+          <dl>
+            <dt>Vitality</dt><dd class="num">14</dd>
+            <dt>Technique</dt><dd class="num">16</dd>
+            <dt>Motivity</dt><dd class="num">5</dd>
+          </dl>
+        </Frame>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Bonfire 2D (loader size and fallback size)</h2>
+      <div class="row bottom">
+        <Bonfire2D size={72} sword={false} />
+        <Bonfire2D size={240} />
+      </div>
+    </section>
+  </div>
+</WorldLayout>
+
+<style>
+  .lab {
+    max-width: var(--maxw);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-7);
+  }
+  h1 {
+    font-size: var(--fs-56);
+  }
+  section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+  }
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--sp-4);
+  }
+  figure {
+    margin: 0;
+  }
+  .chip {
+    height: 72px;
+    border: var(--stroke) solid var(--c-line-strong);
+  }
+  figcaption {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--fs-16);
+    margin-top: var(--sp-2);
+  }
+  code {
+    font-size: var(--fs-14);
+    color: var(--c-ember);
+  }
+  .spec-display {
+    font-family: var(--font-display);
+    font-size: var(--fs-hero);
+    letter-spacing: var(--tracking-display);
+    line-height: var(--lh-tight);
+  }
+  .spec-h {
+    font-family: var(--font-display);
+    font-size: var(--fs-32);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-ember);
+  }
+  .spec-body {
+    max-width: var(--maxw-text);
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-6);
+    align-items: flex-start;
+  }
+  .row.tight {
+    gap: var(--sp-4);
+  }
+  .row.bottom {
+    align-items: flex-end;
+  }
+  .col {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    align-items: flex-start;
+  }
+  .stats {
+    max-width: 380px;
+  }
+  .stats dl {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--sp-1) var(--sp-4);
+    margin: 0;
+  }
+  .stats dd {
+    margin: 0;
+  }
+</style>
