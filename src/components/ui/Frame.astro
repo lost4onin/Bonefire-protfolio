@@ -6,11 +6,12 @@
 interface Props {
   title?: string; // optional heading in the top rule, Lies of P style
   class?: string;
+  [key: string]: unknown; // forwards the parent's scope attribute so its styles reach the frame
 }
-const { title, class: className } = Astro.props;
+const { title, class: className, ...rest } = Astro.props;
 ---
 
-<div class:list={['frame', className]}>
+<div class:list={['frame', className]} {...rest}>
   <span class="corner tl" aria-hidden="true"></span>
   <span class="corner tr" aria-hidden="true"></span>
   <span class="corner bl" aria-hidden="true"></span>

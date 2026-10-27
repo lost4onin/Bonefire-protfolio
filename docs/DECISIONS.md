@@ -43,3 +43,9 @@ Three layers: `.claude/settings.json` attribution set to empty (+ legacy `includ
 
 ### 2026-10-26: Fonts via Fontsource npm packages
 Self-hosted, no Google Fonts request at runtime (privacy, performance, no layout shift from a third party).
+
+### 2026-10-27: M1: stay on Astro 5 despite `npm audit` findings
+Starter installed and built with no fixes (astro 5.18.2, three 0.170, gsap 3.15, TS 5.9); lockfile committed. `npm audit` reports 5 issues (esbuild dev-server file read on Windows, sharp/libvips, zod) whose only fix is Astro 7 (major). None reach visitors: the site is static, sharp/zod run only at build time on our own content, and the dev server listens on localhost only (don't use `--host` on untrusted networks). Re-check at M12; an Astro 7 upgrade would be its own decision. Rejected: `npm audit fix --force` mid-project.
+
+### 2026-10-27: `Frame` forwards extra attributes like `TextBox`
+So a parent's scoped styles on `<Frame class="…">` apply (Astro passes the scope as a `data-astro-cid-*` attribute).

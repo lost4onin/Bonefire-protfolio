@@ -24,14 +24,14 @@ Legend: 🧱 build · 🎨 visual · 🔊 sound · 📄 content needed from Akre
 
 The starter was written **without npm access**, so nothing has been installed or built yet.
 
-- [ ] `npm install` succeeds. If a version range doesn't resolve, bump to the nearest existing version and log it in DECISIONS.md
-- [ ] `npm run build` passes (`astro check` 0 errors). Fix anything that fails. Common suspects:
+- [x] `npm install` succeeds. If a version range doesn't resolve, bump to the nearest existing version and log it in DECISIONS.md
+- [x] `npm run build` passes (`astro check` 0 errors). Fix anything that fails. Common suspects:
   - Fontsource import paths (`@fontsource-variable/crimson-pro/wght-italic.css`) → check `node_modules` for the actual file names
   - `content.config.ts` loader/schema API vs the installed Astro version
   - scoped style on components receiving `class` (see `Frame` vs `TextBox`)
-- [ ] `npm run dev`: `/`, `/cv`, `/lab`, `/does-not-exist` (404) render with the right fonts and palette
+- [x] `npm run dev`: `/`, `/cv`, `/lab`, `/does-not-exist` (404) render with the right fonts and palette
 - [ ] Sword cursor appears on desktop, native cursor on touch emulation; it survives a client-side navigation
-- [ ] `git config core.hooksPath` prints `.githooks` (set by `npm install`'s `prepare` script) — the attribution-stripping hook is active
+- [x] `git config core.hooksPath` prints `.githooks` (set by `npm install`'s `prepare` script) — the attribution-stripping hook is active
 - [ ] Claude proposes the first commit message (no attribution); **Akrem** commits and pushes `main` to `lost4onin/Bonefire-protfolio`
 - [ ] **Akrem** imports the repo in Vercel, sets Node 22.x, turns on Deployment Protection for production (DEPLOYMENT.md checklist 2–4) — Claude only guides
 - [ ] Production build is green on Vercel; Akrem pastes the URL → Claude puts it in `astro.config.mjs` `site` and `docs/DEPLOYMENT.md`
