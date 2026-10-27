@@ -60,6 +60,8 @@ Rules:
 
 Planned (see MILESTONES.md): `Loader`, `TravelMenu`, `TitleCard`, `Radar`, `Tabs`, `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
 
+**Placeholder status.** Palette, fonts and the rules in this doc stand. The _visuals_ of the current components and pages are placeholders, and a major UI pass is coming once Akrem's models and final names arrive. `SwordCursor` will become a **gauntlet cursor** with states `idle` / `point` / `press` / `grab` (Akrem's model, trialled as a live 3D cursor with a sprite fallback if it's slow; desktop only, hotspot at the fingertip). See CLAUDE.md → "Things in flux".
+
 ## 5. Motion
 
 | Moment                  | Duration                  | Easing                                             |

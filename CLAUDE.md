@@ -21,7 +21,7 @@ The audience is **recruiters**. The theme is the hook; the content is the point.
 2. **Real content is real HTML.** All facts render server-side as semantic HTML (works without JS, crawlable, screen-reader friendly). JS only _enhances_ (3D, transitions, sound, cursor).
 3. **Lore never hides facts.** Every in-world name has its plain label next to it: "Hall of Works · Projects", "Python Master · Python". Never make a recruiter decode the theme.
 4. **Original work only.** No FromSoftware / Round8 assets, logos, fonts, sounds, or verbatim phrases ("YOU DIED", "Bonfire Lit", "Victory Achieved", "Enemy Felled"…). Homage, not copy. Our phrases: "Flame Rekindled", "Vanquished", "Lost in the Fog".
-5. **Performance budget.** 2D pages ship ~0 KB JS beyond the shared layout. Three.js loads **only** on `/` and `/works` (island, lazy). Each 3D scene ≤ 1.5 MB of models, ≤ 100k triangles. Lighthouse Perf ≥ 85 (3D pages) / ≥ 95 (others), A11y ≥ 95.
+5. **Performance budget.** 2D pages ship ~0 KB JS beyond the shared layout. Three.js loads **only** on `/` and `/works` (island, lazy). _Exception being trialled: the 3D gauntlet cursor (desktop only, see "Things in flux")._ Each 3D scene ≤ 1.5 MB of models, ≤ 100k triangles. Lighthouse Perf ≥ 85 (3D pages) / ≥ 95 (others), A11y ≥ 95.
 6. **Accessible by default.** Keyboard reachable, visible focus (ember outline), `prefers-reduced-motion` respected (tokens already collapse durations), touch targets ≥ 44px, contrast ≥ 4.5:1 for body text. Custom cursor only on `(hover: hover) and (pointer: fine)`.
 7. **Never autoplay audio.** Sound starts only after an explicit user choice ("Rest with sound?"). Remember the choice in `localStorage`, wrapped in try/catch.
 8. **Honesty in numbers.** Stats, ranks and radar values are Akrem's self-assessment. Never invent metrics, users, accuracy figures or dates. Missing facts stay as `TODO(Akrem)` and are listed in `docs/CONTENT.md` → "Open content".
@@ -104,9 +104,18 @@ docs/        the plan, design, content, milestones, decisions, references
 
 **Ask Akrem** (don't guess) when: a fact is missing from the CV/docs, a visual choice isn't covered by DESIGN.md, a dependency would be added, or a change would break a non-negotiable.
 
+## Things in flux (check before every milestone)
+
+The current UI is a **placeholder**. Major UI updates are coming, so build for change and don't polish placeholder visuals.
+
+- **Cursor → gauntlet.** The sword cursor will be replaced by a **gauntlet** made from Akrem's 3D model, with several states (idle, point/hover, press/click, grab/catch while dragging or holding, …). The model arrives later, together with the bonfire and relic models. Until then keep the cursor a small state machine (one element, a `data-state` attribute, art per state) so the art swaps without rewiring. **Akrem's call: try it as a live 3D cursor first.** Rules for the trial: only on `(hover: hover) and (pointer: fine)` with WebGL and no `prefers-reduced-motion` / `saveData` (otherwise the 2D cursor); loaded lazily after first paint so it never delays content; persisted across navigation (`transition:persist`, one small transparent canvas, created once); paused when the tab is hidden. **Measure it** (desktop Lighthouse on a 2D page and on `/`, frame rate while moving). If it makes the site slow (2D pages drop below Perf 95, `/` below 85, or visible frame drops), downgrade: pre-rendered per-state sprites from the same model, or another alternative agreed with Akrem.
+- **3D models pending** (gauntlet, bonfire scene props, relics). Build procedural/placeholder versions behind a loader so a GLB drops in through `/add-model` without rework. See `docs/ASSETS.md` → Expected models.
+- **The CV will change.** A CV update must be a **data-only edit** (`src/data/*`, `src/content/*`) plus replacing the PDF. Never hard-code a fact in a template. When the new CV arrives, re-diff `docs/CONTENT.md` → "CV facts" first.
+- **In-world names will change** (section names, relic/boss/covenant names, skill titles, lore lines). They live only in data. Routes and slugs are separate from display names, so a rename never breaks a URL; if a route itself must change, add a redirect.
+- **Before a big UI change**, ask Akrem whether that area is still placeholder or has final art/copy.
+
 ## Status
 
-- ✅ **M0 Foundations** — tokens, fonts, layouts, UI primitives, content collections seeded from the CV, `/cv` complete, `/lab`, 404, model pipeline, portrait graded.
-- ✅ GitHub repo created by Akrem: `lost4onin/Bonefire-protfolio`. Vercel account created by Akrem; he links the project during M1.
-- ⚠ **Not yet verified on a machine**: the starter was written in an environment without npm access. First task of M1 is `npm install && npm run build` and fixing anything that fails. See `docs/MILESTONES.md` → M1.
-- ⏭ Next: **M1** (verify, first push, Akrem links Vercel), then **M2** (loading, intro, travel, warp).
+- ✅ **M0 Foundations**: tokens, fonts, layouts, UI primitives, content collections seeded from the CV, `/cv` complete, `/lab`, 404, model pipeline, portrait graded.
+- ✅ **M1 Verify, version, deploy**: install and build green with no fixes, commit-msg hook active, Vercel linked by Akrem. Production: https://bonefire-protfolio.vercel.app (Deployment Protection on until launch).
+- ⏭ Next: **M2** (loading, intro, travel, warp), with **M3** (3D bonfire) alongside. Keep "Things in flux" above in mind.

@@ -48,6 +48,16 @@ Two routes, pick per asset:
 - **Blender Python script** (`scripts/blender/*.py`, run with `blender -b -P script.py`) that builds and exports a `.glb`, which then goes through the pipeline. Use for anything that needs sculpted detail or baked textures.
 - Style: stylised low-poly, flat or lightly textured, dark materials that read as silhouettes against fog. Detail goes where the firelight hits.
 
+### Expected models from Akrem
+
+Not delivered yet. Build placeholders that these can replace without rework.
+
+| Model               | Used on                  | Delivery route                                                                                                                                                                                                                   |
+| ------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Gauntlet (cursor)   | Every page, desktop only | **Trial:** live GLB through `npm run models` (rigged or one mesh per pose for idle, point, press, grab, …), kept small (proposal: ≤ 300 KB, ≤ 10k triangles). **Fallback** if slow: pre-render each pose to sprite frames (WebP) |
+| Bonfire scene props | `/` (M3)                 | GLB through `npm run models`; replaces the procedural props                                                                                                                                                                      |
+| Relics (items)      | `/works` (M5)            | GLB through `npm run models`, ≤ 600 KB / ≤ 20k triangles each                                                                                                                                                                    |
+
 ### Model licence log
 
 | File       | Source | Author | Licence |

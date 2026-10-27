@@ -8,7 +8,7 @@ A developer portfolio that plays like the opening of a Souls-like game:
 
 - **First screen:** a bonfire in a dark, foggy ruin.
 - **Navigation:** sections are other bonfires, and moving between them is a short warp (fade to black, then a location title card).
-- **Cursor:** a sword.
+- **Cursor:** a gauntlet with several states (idle, point, press, grab), from Akrem's 3D model. A sword is the placeholder until the model arrives.
 - **Text:** black boxes with white text.
 - **Profile:** a Lies of P–style status screen.
 

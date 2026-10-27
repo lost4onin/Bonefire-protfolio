@@ -3,8 +3,7 @@ import { defineConfig } from 'astro/config';
 
 // https://docs.astro.build/en/reference/configuration-reference/
 export default defineConfig({
-  // TODO(M1): replace with the production URL Vercel gives Akrem after linking the project.
-  // TODO(M12): then with the custom domain, e.g. 'https://akrem.dev'
+  // Vercel production URL. TODO(M12): replace with the custom domain, e.g. 'https://akrem.dev'
   site: 'https://bonefire-protfolio.vercel.app',
   // Static output — Vercel serves it with zero config.
   output: 'static',

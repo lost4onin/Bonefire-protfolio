@@ -30,12 +30,14 @@ The starter was written **without npm access**, so nothing has been installed or
   - `content.config.ts` loader/schema API vs the installed Astro version
   - scoped style on components receiving `class` (see `Frame` vs `TextBox`)
 - [x] `npm run dev`: `/`, `/cv`, `/lab`, `/does-not-exist` (404) render with the right fonts and palette
-- [ ] Sword cursor appears on desktop, native cursor on touch emulation; it survives a client-side navigation
+- [x] Sword cursor appears on desktop, native cursor on touch emulation; it survives a client-side navigation
 - [x] `git config core.hooksPath` prints `.githooks` (set by `npm install`'s `prepare` script) — the attribution-stripping hook is active
-- [ ] Claude proposes the first commit message (no attribution); **Akrem** commits and pushes `main` to `lost4onin/Bonefire-protfolio`
-- [ ] **Akrem** imports the repo in Vercel, sets Node 22.x, turns on Deployment Protection for production (DEPLOYMENT.md checklist 2–4) — Claude only guides
-- [ ] Production build is green on Vercel; Akrem pastes the URL → Claude puts it in `astro.config.mjs` `site` and `docs/DEPLOYMENT.md`
-- [ ] Update CLAUDE.md "Status"
+- [x] Claude proposes the first commit message (no attribution); **Akrem** commits and pushes `main` to `lost4onin/Bonefire-protfolio`
+- [x] **Akrem** imports the repo in Vercel, sets Node 22.x, turns on Deployment Protection for production (DEPLOYMENT.md checklist 2–4) — Claude only guides
+- [x] Production build is green on Vercel; Akrem pastes the URL → Claude puts it in `astro.config.mjs` `site` and `docs/DEPLOYMENT.md` (https://bonefire-protfolio.vercel.app)
+- [x] Update CLAUDE.md "Status"
+
+> **From M2 on:** the UI is a placeholder, the cursor becomes a gauntlet, and the CV and in-world names will change. Read CLAUDE.md → "Things in flux" before starting each milestone.
 
 ## M2 — Loading screen, intro, travel menu, warp 🧱🎨 (Days 4–5)
 
@@ -46,7 +48,8 @@ Spec: PLAN.md §2, §5 · DESIGN.md → Motion, Text box · prototype: `docs/ref
 - [ ] **Travel menu** component (`components/ui/TravelMenu.astro`): lists `bonfires` from `site.ts` with lore name + plain label + one-line lore; keyboard: ↑/↓ to move, Enter to go, `M` toggles it from any page, `ESC` closes. Proper `role="dialog"`, focus trap, focus returns to the trigger
 - [ ] **Warp transition**: on travel, fade to black (`--dur-fade`) → location title card with the destination's `name` (`--dur-title`) → new page fades in. Built with Astro View Transitions (custom animation) + GSAP if needed. **Total ≤ 1.2s**. Reduced motion → simple 150ms cross-fade, no title card
 - [ ] `WorldLayout` header gets a small "Travel" button (touch users have no `M` key)
-- [ ] Sword cursor: "point" state over interactive elements (slight rotation), "slash" on click (exists)
+- [ ] Cursor as a **state machine** (`data-state`: `idle` / `point` over interactive elements / `press` on click / `grab` while dragging or holding), still drawn with the placeholder sword art so the gauntlet art can swap in later
+- [ ] 📄🎨 **Gauntlet cursor** (can land after M2, once Akrem's model exists): **trial as a live 3D cursor** (desktop fine pointer only, lazy, persisted, paused when hidden; 2D cursor for touch / reduced motion / no WebGL), set the hotspot, map states to poses. Measure desktop Lighthouse on a 2D page and `/` plus frame rate; if it's slow, downgrade to pre-rendered sprites (CLAUDE.md → Things in flux)
 - [ ] `/lab` specimens: Loader (forced visible), TravelMenu, title card
 - [ ] Mobile: everything usable at 360px wide; Travel menu becomes a bottom sheet
 

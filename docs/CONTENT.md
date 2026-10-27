@@ -3,6 +3,11 @@
 Every fact comes from Akrem's CV (`public/cv/akrem-medimagh-cv.pdf`, autumn 2026) unless marked **ASSUMED** or **PROPOSAL**.
 Each fact lives in **one** place in code. Pages read from there.
 
+> **Expect changes.** Akrem will update the CV, and in-world names (sections, relics, bosses, covenants, skill titles) may be renamed.
+>
+> - **New CV:** replace `public/cv/akrem-medimagh-cv.pdf`, diff it against "CV facts" below, update this doc, then edit only the data files in the table. No template edits.
+> - **Renames:** change the display name in data only. Routes and slugs stay stable; if one must change, add a redirect.
+
 ## Where each fact lives
 
 | Fact                                                                          | Code location                   | Shown on                                         |

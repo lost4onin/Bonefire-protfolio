@@ -10,7 +10,7 @@ Claude Code writes code and proposes commits; it **never** creates, links or rec
 | Hosting          | Vercel, Hobby (free) plan, Git integration                                                                                              |
 | Framework preset | Astro (auto-detected). Build `npm run build`, output `dist`, install `npm install`                                                      |
 | Node             | 22.x (Project Settings → Build and Deployment → Node.js Version)                                                                        |
-| Production URL   | `TODO(Akrem)`: paste here after linking, and in `astro.config.mjs` → `site`                                                             |
+| Production URL   | https://bonefire-protfolio.vercel.app (also `astro.config.mjs` → `site`)                                                                |
 | Custom domain    | `TODO(Akrem)` at launch (M12)                                                                                                           |
 
 ## How a deploy happens
@@ -27,11 +27,11 @@ merge PR into main                →  Vercel builds  →  Production URL
 
 ## Akrem's one-time setup checklist (M1)
 
-1. [ ] Clone the repo, copy the starter files in, `npm install` (this also enables the git hook), commit, push `main` (see README → Getting started).
-2. [ ] vercel.com → **Add New… → Project** → Import `lost4onin/Bonefire-protfolio` → Framework _Astro_ (auto) → **Deploy**.
-3. [ ] Settings → Build and Deployment → Node.js Version **22.x**.
-4. [ ] Settings → **Deployment Protection** → Vercel Authentication **on for production too** until launch (so the half-built site isn't public). Use _Shareable Links_ to show it to friends.
-5. [ ] Copy the production URL into this file and into `astro.config.mjs` → `site`.
+1. [x] Clone the repo, copy the starter files in, `npm install` (this also enables the git hook), commit, push `main` (see README → Getting started).
+2. [x] vercel.com → **Add New… → Project** → Import `lost4onin/Bonefire-protfolio` → Framework _Astro_ (auto) → **Deploy**.
+3. [x] Settings → Build and Deployment → Node.js Version **22.x**.
+4. [x] Settings → **Deployment Protection** → Vercel Authentication **on for production too** until launch (so the half-built site isn't public). Use _Shareable Links_ to show it to friends.
+5. [x] Copy the production URL into this file and into `astro.config.mjs` → `site`.
 6. [ ] (M9) Settings → Environment Variables → `PUBLIC_WEB3FORMS_KEY` for Production + Preview.
 7. [ ] (M11) Analytics tab → enable Web Analytics.
 8. [ ] (M12) Domains → add the custom domain, set DNS at the registrar, turn Deployment Protection off for production, update `site`.

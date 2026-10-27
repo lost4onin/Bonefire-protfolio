@@ -61,6 +61,14 @@ Self-hosted, no Google Fonts request at runtime (privacy, performance, no layout
 
 Starter installed and built with no fixes (astro 5.18.2, three 0.170, gsap 3.15, TS 5.9); lockfile committed. `npm audit` reports 5 issues (esbuild dev-server file read on Windows, sharp/libvips, zod) whose only fix is Astro 7 (major). None reach visitors: the site is static, sharp/zod run only at build time on our own content, and the dev server listens on localhost only (don't use `--host` on untrusted networks). Re-check at M12; an Astro 7 upgrade would be its own decision. Rejected: `npm audit fix --force` mid-project.
 
+### 2026-10-27: Cursor becomes a gauntlet from Akrem's model
+
+Replaces the sword (placeholder until the model arrives). States: idle, point, press, grab/catch, more as Akrem defines them. **Akrem chose to trial it as a live Three.js cursor first**, a deliberate exception to "Three.js only on `/` and `/works`", limited to desktop fine pointers, lazy-loaded, persisted across pages. If measurements show it slows the site (Lighthouse below target or frame drops), downgrade to pre-rendered per-state sprites from the same model, or another alternative. Rejected for now: going straight to sprites without trying 3D.
+
+### 2026-10-27: Current UI is a placeholder; CV and names will change
+
+Akrem plans a major UI pass after his models (gauntlet, bonfire, relics) arrive, and will update the CV and in-world names. So: no pixel polish on placeholder visuals, facts and names only in data, routes/slugs independent of display names. Tracked in CLAUDE.md → "Things in flux".
+
 ### 2026-10-27: `Frame` forwards extra attributes like `TextBox`
 
 So a parent's scoped styles on `<Frame class="…">` apply (Astro passes the scope as a `data-astro-cid-*` attribute).
