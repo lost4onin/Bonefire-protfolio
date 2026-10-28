@@ -120,4 +120,5 @@ The current UI is a **placeholder**. Major UI updates are coming, so build for c
 - ✅ **M0 Foundations**: tokens, fonts, layouts, UI primitives, content collections seeded from the CV, `/cv` complete, `/lab`, 404, model pipeline, portrait graded.
 - ✅ **M1 Verify, version, deploy**: install and build green with no fixes, commit-msg hook active, Vercel linked by Akrem. Production: https://bonefire-protfolio.vercel.app (Deployment Protection on until launch).
 - ✅ **M2 Loading, intro, travel, warp**: loader API for M3, once-per-visitor intro, Travel menu (inline + `M` dialog, bottom sheet on phones), warp on every page change (~1.9s), gauntlet cursor state machine (pack is final, no 3D cursor).
-- ⏭ Next: **M3** (3D bonfire: `public/models/bonfire.glb`, flames and sparks in code, drive `window.__loader`). Keep "Things in flux" above in mind.
+- ✅ **M3 3D bonfire landing**: Akrem's model + procedural fire/embers/ruins, framed onto the page's hearth, quality tiers with FPS step-down, 2D fallback (incl. software WebGL), loader for the download only. Lighthouse `/` desktop 100, mobile 96.
+- ⏭ Next: **M4** (The Pilgrim, `/about`). Keep "Things in flux" above in mind.

@@ -1,0 +1,137 @@
+---
+/**
+ * 3D bonfire island for the landing (goes in WorldLayout's "scene" slot, only on `/`).
+ * The page ships no three.js: this script decides the mode first (sceneQuality.ts, tiny), and only
+ * for 3D does it fetch the three chunk, after first paint + idle time, so text never waits.
+ * Drives the loading screen (window.__loader: expect → progress → done).
+ * The 2D bonfire inside [data-hearth] stays until the first 3D frame, then cross-fades out
+ * (hearth[data-live]); it stays for good on '2d' (no WebGL, reduced motion, Save-Data, weak phone).
+ * Disposed on astro:before-swap. Debug: /?quality=high|low|2d.
+ */
+---
+
+<canvas id="scene3d" class="scene3d" aria-hidden="true"></canvas>
+
+<script>
+  import { pickMode } from './sceneQuality';
+  import type { BonfireScene } from './BonfireScene';
+
+  let scene: BonfireScene | null = null;
+
+  /**
+   * Wait until the page's own content has painted WITH its fonts (the text is the LCP), then an
+   * idle slice, so the 3D chunk and model never compete with the content for bandwidth or CPU.
+   */
+  const afterContentPaint = async () => {
+    if (document.readyState !== 'complete')
+      await new Promise((r) => addEventListener('load', r, { once: true }));
+    await document.fonts.ready;
+    // the browser's own Largest Contentful Paint entry (buffered: already there after a page swap)
+    await new Promise<void>((resolve) => {
+      if (!PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint'))
+        return resolve();
+      const cap = setTimeout(resolve, 3000);
+      const po = new PerformanceObserver(() => {
+        po.disconnect();
+        clearTimeout(cap);
+        resolve();
+      });
+      po.observe({ type: 'largest-contentful-paint', buffered: true });
+    });
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+    await new Promise<void>((resolve) =>
+      'requestIdleCallback' in window
+        ? requestIdleCallback(() => resolve(), { timeout: 1500 })
+        : setTimeout(resolve, 200),
+    );
+  };
+
+  /** Scene3D's script runs before Loader's (it is earlier in the page), so wait for the API. */
+  const loaderReady = () =>
+    new Promise<LoaderApi | undefined>((resolve) => {
+      if (window.__loader) return resolve(window.__loader);
+      const t = setTimeout(() => resolve(window.__loader), 1000); // no loader on this page
+      document.addEventListener(
+        'ff:loader-ready',
+        () => {
+          clearTimeout(t);
+          resolve(window.__loader);
+        },
+        { once: true },
+      );
+    });
+
+  function teardown() {
+    scene?.dispose();
+    scene = null;
+  }
+
+  async function boot() {
+    const canvas = document.getElementById('scene3d') as HTMLCanvasElement | null;
+    if (!canvas || canvas.dataset.booted) return;
+    canvas.dataset.booted = '1';
+    const hearth = document.querySelector<HTMLElement>('[data-hearth]');
+    const { mode, reason } = await pickMode();
+    canvas.dataset.mode = mode;
+    canvas.dataset.reason = reason;
+    if (mode === '2d') return;
+
+    const loader = await loaderReady();
+    const fallBack = () => {
+      teardown();
+      canvas.dataset.mode = '2d';
+      delete canvas.dataset.live;
+      if (hearth) delete hearth.dataset.live;
+    };
+
+    // the deliberate wait for the content's paint is not loading: start counting only after it
+    await afterContentPaint();
+    if (!canvas.isConnected) return;
+    loader?.expect();
+    try {
+      const { BonfireScene, paletteFromTokens } = await import('./BonfireScene');
+      if (!canvas.isConnected) return loader?.done();
+      loader?.progress(0.1);
+      scene = new BonfireScene(canvas, hearth, mode, paletteFromTokens(), {
+        onProgress: (p) => loader?.progress(p),
+        onFallback: fallBack,
+        onTier: (tier) => (canvas.dataset.mode = tier),
+        // the loader covers the download only; the warm-up runs behind the 2D bonfire
+        onDownloaded: () => {
+          loader?.progress(1);
+          loader?.done();
+        },
+      });
+      await scene.load();
+      if (!canvas.isConnected || !scene) return teardown();
+      scene.start();
+      requestAnimationFrame(() => {
+        canvas.dataset.live = '1';
+        if (hearth) hearth.dataset.live = '1';
+      });
+    } catch (err) {
+      console.warn('[scene3d] falling back to the 2D bonfire', err);
+      fallBack();
+      loader?.done();
+    }
+  }
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+  document.addEventListener('astro:before-swap', teardown);
+</script>
+
+<style>
+  .scene3d {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity var(--dur-fade) var(--ease-in-out);
+  }
+  .scene3d[data-live] {
+    opacity: 1;
+  }
+</style>

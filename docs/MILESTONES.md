@@ -53,19 +53,19 @@ Spec: PLAN.md §2, §5 · DESIGN.md → Motion, Text box · prototype: `docs/ref
 - [x] `/lab` specimens: Loader (forced visible), TravelMenu, title card
 - [x] Mobile: everything usable at 360px wide; Travel menu becomes a bottom sheet
 
-## M3 — 3D bonfire landing 🧱🎨 (Days 4–5, overlaps M2)
+## ✅ M3 — 3D bonfire landing 🧱🎨 (Days 4–5, overlaps M2)
 
 Spec: PLAN.md §1, §8 · ASSETS.md budgets · match the `Bonfire2D` silhouette and the prototype mood
 
-- [ ] `components/three/BonfireScene.ts` + `Scene3D.astro` island (loaded with a dynamic `import()` after first paint, only on `/`)
-- [ ] Scene: ring of stones, planted sword, logs, ruined arch/pillars silhouettes, ground plane. Start **procedural / low-poly** (built in code); swap in Akrem's models later via the pipeline
-- [ ] Fire: GPU particles or animated shader sprites (additive blending) + a flickering `PointLight` (the only dynamic light). Embers rising. No fire _model_
-- [ ] Atmosphere: `FogExp2` in palette colours, subtle camera breathing/drift, slight parallax on pointer move (desktop only)
-- [ ] Quality tiers (`sceneQuality.ts`): high / low by `hardwareConcurrency`, `deviceMemory`, DPR, and an FPS probe in the first 2s; low = fewer particles, DPR 1, no shadows
-- [ ] Fallback to `Bonfire2D` when: no WebGL, `prefers-reduced-motion`, `saveData`, or low tier + mobile
-- [ ] Drives the M2 loader via `THREE.LoadingManager` (real progress)
-- [ ] Lifecycle: pause when tab hidden; `dispose()` geometry/materials/textures/renderer on `astro:before-swap`
-- [ ] Budget met: landing JS (excluding three chunk) small; total landing transfer ≤ ~1.5 MB on high tier; Lighthouse Perf ≥ 85
+- [x] `components/three/BonfireScene.ts` + `Scene3D.astro` island (loaded with a dynamic `import()` after first paint, only on `/`). Starts after fonts + the browser's LCP entry + idle, so the 3D never competes with the text
+- [x] Scene: ring of stones, planted sword, logs, ruined arch/pillars silhouettes, ground plane. Akrem's `bonfire.glb` (stones, ash, bones, skull, coiled sword) + procedural logs, ground and ruins (`props/ruins.ts`); procedural stone ring if the model fails
+- [x] Fire: GPU particles or animated shader sprites (additive blending) + a flickering `PointLight` (the only dynamic light). Embers rising. No fire _model_ (`props/fire.ts`: noise-flame billboards, GPU embers + sparks, glow; flames kept below the hilt)
+- [x] Atmosphere: `FogExp2` in palette colours, subtle camera breathing/drift, slight parallax on pointer move (desktop only). Camera framed onto the page's hearth element; CSS fog/grain/vignette sit over the canvas
+- [x] Quality tiers (`sceneQuality.ts`): high / low by `hardwareConcurrency`, `deviceMemory`, DPR, and an FPS probe in the first 2s; low = fewer particles, DPR 1, no shadows. Probe steps high → low → 2D (tested at 5 fps). Shadows off on both tiers (see DECISIONS). Debug: `/?quality=high|low|2d`
+- [x] Fallback to `Bonfire2D` when: no WebGL, `prefers-reduced-motion`, `saveData`, or low tier + mobile. Also software-rendered WebGL (no GPU), detected in a Worker, so those visitors never download three.js
+- [x] Drives the M2 loader via `THREE.LoadingManager` (real progress): byte progress of the download only, so fast/cached visits never see it; the GPU warm-up runs behind the 2D bonfire
+- [x] Lifecycle: pause when tab hidden; `dispose()` geometry/materials/textures/renderer on `astro:before-swap`
+- [x] Budget met: landing JS (excluding three chunk) small; total landing transfer ≤ ~1.5 MB on high tier; Lighthouse Perf ≥ 85. Measured 2026-10-28 (Lighthouse 12, real Intel UHD GPU): `/` desktop 100, mobile 96; no-GPU desktop 100, mobile 97 (2D); A11y/BP/SEO 100. Transfer 1.4 MB (three 157 KB gz + model 1,051 KB)
 
 ## M4 — The Pilgrim (`/about`) 🧱🎨📄 (Day 6)
 

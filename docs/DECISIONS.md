@@ -112,3 +112,21 @@ Akrem's calls after trying M2:
 - **Warp ≈ 1.9s** (500 in · 800 title · 600 out, the prototype's rhythm; `--dur-warp` max raised from 1.2s to 2s) so the journey is felt. Reduced motion is still a 150ms cross-fade. Trade-off accepted: "Skip the journey" → `/cv` also takes ~1.9s.
 - **Cursor:** still for `--dur-idle` (5s) → `idling` (the pack's flexing animation) until it moves. A long press only becomes `grab` over `[data-cursor="grab"]` or during a native drag; over anything else it stays `press`.
 - **Header and footer are solid bars in the page flow** (`position: sticky`, `--c-void` + hairline), replacing fixed gradient overlays that content showed through. On phones only the footer stays pinned (compact: status line, then email · CV · Credits), and the header scrolls away, so the chrome doesn't take a third of the screen.
+
+### 2026-10-28: M3: how the 3D landing stays fast
+
+Measured with Lighthouse 12 on a real Intel UHD GPU and on SwiftShader (what no-GPU machines and lab tools use). Each choice below came from a profile, not a guess:
+
+- **Boot after the content's paint:** the three chunk is fetched only after `load`, `document.fonts.ready`, the browser's LCP entry and an idle slice. Fetching earlier competed with the fonts and cost ~15 mobile points.
+- **Model materials rebuilt as `MeshStandardMaterial`:** the file's KHR_materials_specular/ior made them `MeshPhysicalMaterial`, whose shaders took seconds to compile on software renderers.
+- **No shadows on either tier:** a point-light cube shadow adds 6 passes and heavier shaders for a subtle effect. ASSETS.md already says one dynamic light, everything else ambient.
+- **GPU work spread out:** one texture upload per idle slice, per-object `compileAsync`, and `checkShaderErrors` off in production (the error-log queries forced each compile to finish synchronously).
+- **Software WebGL → 2D:** `failIfMajorPerformanceCaveat` plus a renderer-name check (SwiftShader, llvmpipe, Basic Render), run in a Worker on an OffscreenCanvas, because even a 1×1 context blocked the main thread for ~1s on software. Those visitors never download three.js. `?quality=` still forces 3D for testing.
+- **Loader covers the download only:** `expect()` starts after the deliberate wait and `done()` fires when the bytes have arrived. Counting the warm-up made a loading screen drop over already-visible content on every visit.
+- **FPS probe on real time:** it used the frame delta capped for animation (0.1s), so at 5 fps it never stepped down; it now uses the raw delta (verified high → low → 2D).
+
+Rejected: delaying 3D until user input (the bonfire is the hook), and a separate low-tier model (only one exists).
+
+### 2026-10-28: M3: 3D fire framed onto the page, not the page onto the fire
+
+The canvas fills the screen behind the page; the camera distance and a view offset put the fire exactly where the 2D bonfire sits (`[data-hearth]`), tracked on scroll and resize. The layout, the intro and the menu are unchanged, and the 2D bonfire cross-fades out when the first 3D frame is drawn. The flames are kept below the sword's hilt so the coiled sword reads as the hero.

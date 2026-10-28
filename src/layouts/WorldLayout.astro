@@ -35,8 +35,9 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
   <slot name="head" slot="head" />
   <a class="skip-link" href="#main">Skip to content</a>
 
-  <Fog density={fog} />
+  <!-- scene under the CSS fog, grain and vignette so they also grade the 3D canvas -->
   <div class="scene-layer"><slot name="scene" /></div>
+  <Fog density={fog} />
 
   <div class="world">
     <header class:list={['chrome', 'top', { quiet: quietChrome }]}>

@@ -68,7 +68,7 @@ Not delivered yet. Build placeholders that these can replace without rework.
 ### Landing bonfire (`public/models/bonfire.glb`)
 
 From `assets-src/models/dark_souls_-_bonfire.glb`: `npm run models -- dark_souls_-_bonfire --name bonfire --texture-size 512 --drop-material boden`.
-1,051 KB, 28,131 triangles, 6 meshes, 6 materials (WebP textures at 512px; 1024px would be 3.1 MB). The optimiser flattens node names, so address parts by **material name**: `steine` stone ring, `asche` ash, `knochen` bones, `schaedel` skull, `klinge` sword blade, `griff` sword hilt. The mossy `boden` ground disc is removed in the pipeline (`--drop-material boden`, Akrem 2026-10-28); M3 supplies its own ground. The coiled sword is kept (Akrem's call, see DECISIONS 2026-10-28). Not used: `bonfire__dark_souls_try2.glb` (602k triangles, sword and baked flames in one mesh), kept as a raw source.
+1,051 KB, 28,131 triangles, 6 meshes, 6 materials (WebP textures at 512px; 1024px would be 3.1 MB). The optimiser flattens node names, so address parts by **material name**: `steine` stone ring, `asche` ash, `knochen` bones, `schaedel` skull, `klinge` sword blade, `griff` sword hilt. The mossy `boden` ground disc is removed in the pipeline (`--drop-material boden`, Akrem 2026-10-28); M3 supplies its own ground. The coiled sword is kept (Akrem's call, see DECISIONS 2026-10-28). At load (`components/three/loadBonfire.ts`) the file's physical materials are rebuilt as `MeshStandardMaterial` with the same maps, tinted toward the palette; no shadows are cast. Not used: `bonfire__dark_souls_try2.glb` (602k triangles, sword and baked flames in one mesh), kept as a raw source.
 
 ### Model licence log
 
