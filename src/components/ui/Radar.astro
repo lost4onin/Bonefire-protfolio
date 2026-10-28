@@ -1,0 +1,443 @@
+---
+/**
+ * Hexagonal ability radar (reference: docs/references/ref-hex-radar.png, restyled in palette A):
+ * an astrolabe ring, 5 stone grid rings, 6 spokes, and an ember polygon with a faint fill and glow.
+ * Several `sets` (e.g. Software / AI) become tabs; switching morphs the polygon (rAF tween, no GSAP,
+ * `--dur-morph`) and cross-fades the axis labels.
+ * Labels are HTML placed over the SVG, so the IM Fell type stays at 16px however small the chart.
+ * The data is also a real <table> per set (visually hidden; shown when JS is off), so nothing
+ * is locked in a picture. Used on /about; specimen in /lab.
+ */
+import { RADAR, radarPoint, radarPoints } from '@/lib/radar';
+
+interface Props {
+  id: string; // prefix for element ids, unique on the page
+  label: string; // accessible name, e.g. "Affinities"
+  sets: readonly { id: string; label: string; axes: readonly { name: string; value: number }[] }[];
+  max: number;
+  class?: string;
+}
+const { id, label, sets, max, class: className } = Astro.props;
+const { r, width, height, cx, cy, rings } = RADAR;
+const n = sets[0]!.axes.length;
+const first = sets[0]!.axes.map((a) => a.value);
+
+const ringPoints = Array.from({ length: rings }, (_, k) =>
+  Array.from({ length: n }, (_, i) =>
+    radarPoint(i, n, (k + 1) / rings)
+      .map((c) => c.toFixed(2))
+      .join(','),
+  ).join(' '),
+);
+const spokes = Array.from({ length: n }, (_, i) => radarPoint(i, n, 1));
+// astrolabe ticks every 10°, longer every 30°
+const ticks = Array.from({ length: 36 }, (_, k) => {
+  const a = (k * 10 * Math.PI) / 180;
+  const [from, to] = [r + 2, r + 2 + (k % 3 === 0 ? 7 : 3.5)];
+  const at = (d: number, f: (x: number) => number, c: number) => (c + d * f(a)).toFixed(2);
+  return {
+    x1: at(from, Math.cos, cx),
+    y1: at(from, Math.sin, cy),
+    x2: at(to, Math.cos, cx),
+    y2: at(to, Math.sin, cy),
+  };
+});
+
+// label anchor just outside each vertex; `side` sets how the label hangs off it
+const SIDES = ['nw', 'ne', 'e', 'se', 'sw', 'w'] as const;
+const anchors = Array.from({ length: n }, (_, i) => {
+  const [x, y] = radarPoint(i, n, 1);
+  const side = SIDES[i] ?? 'e';
+  const dx = { nw: 10, ne: -10, e: 12, se: -10, sw: 10, w: -12 }[side];
+  const dy = { nw: -8, ne: -8, e: 0, se: 8, sw: 8, w: 0 }[side];
+  return { side, left: ((x + dx) / width) * 100, top: ((y + dy) / height) * 100 };
+});
+const pct = (v: number) => `${v.toFixed(3)}%`;
+---
+
+<div class:list={['radar', className]} data-radar data-max={max}>
+  {
+    sets.length > 1 && (
+      <div role="tablist" aria-label={`${label}: data set`} class="sets" data-radar-tabs>
+        {sets.map((s, k) => (
+          <button
+            type="button"
+            role="tab"
+            class="set"
+            id={`${id}-tab-${s.id}`}
+            aria-controls={`${id}-panel`}
+            aria-selected={k === 0 ? 'true' : 'false'}
+            tabindex={k === 0 ? 0 : -1}
+            data-values={JSON.stringify(s.axes.map((a) => a.value))}
+          >
+            {s.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  <div
+    class="panel"
+    id={`${id}-panel`}
+    role={sets.length > 1 ? 'tabpanel' : undefined}
+    aria-labelledby={sets.length > 1 ? `${id}-tab-${sets[0]!.id}` : undefined}
+  >
+    <div class="stage" style={`aspect-ratio: ${width} / ${height}`}>
+      <svg viewBox={`0 0 ${width} ${height}`} aria-hidden="true" focusable="false">
+        <defs>
+          <filter id={`${id}-glow`} x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="5"></feGaussianBlur>
+          </filter>
+          <radialGradient id={`${id}-well`}>
+            <stop offset="0" stop-color="currentColor" stop-opacity="0.07"></stop>
+            <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+          </radialGradient>
+        </defs>
+
+        <g class="astrolabe">
+          <circle cx={cx} cy={cy} r={r + 2} fill={`url(#${id}-well)`}></circle>
+          <circle cx={cx} cy={cy} r={r + 2} fill="none"></circle>
+          <circle cx={cx} cy={cy} r={r * 0.2} fill="none" class="inner"></circle>
+          {ticks.map((t) => <line {...t} />)}
+        </g>
+        <g class="grid">
+          {
+            ringPoints.map((pts, k) => (
+              <polygon points={pts} class:list={{ outer: k === rings - 1 }} fill="none" />
+            ))
+          }
+          {spokes.map(([x, y]) => <line x1={cx} y1={cy} x2={x.toFixed(2)} y2={y.toFixed(2)} />)}
+        </g>
+
+        <polygon
+          class="shape-glow"
+          points={radarPoints(first, max)}
+          filter={`url(#${id}-glow)`}
+          data-shape></polygon>
+        <polygon class="shape" points={radarPoints(first, max)} data-shape></polygon>
+        <g class="pips">
+          {
+            first.map((v, i) => {
+              const [x, y] = radarPoint(i, n, v / max);
+              return (
+                <rect
+                  x={(x - 3).toFixed(2)}
+                  y={(y - 3).toFixed(2)}
+                  width="6"
+                  height="6"
+                  transform={`rotate(45 ${x.toFixed(2)} ${y.toFixed(2)})`}
+                  data-pip
+                />
+              );
+            })
+          }
+        </g>
+        <rect
+          class="heart"
+          x={cx - 3}
+          y={cy - 3}
+          width="6"
+          height="6"
+          transform={`rotate(45 ${cx} ${cy})`}></rect>
+      </svg>
+
+      {
+        sets.map((s, k) => (
+          <div class:list={['labels', { on: k === 0 }]} data-set={s.id} aria-hidden="true">
+            {s.axes.map((a, i) => (
+              <span
+                class:list={['axis', `side-${anchors[i]!.side}`]}
+                style={`left: ${pct(anchors[i]!.left)}; top: ${pct(anchors[i]!.top)}`}
+              >
+                <span class="axis-name">{a.name}</span>
+                <span class="axis-value num">{a.value}</span>
+              </span>
+            ))}
+          </div>
+        ))
+      }
+    </div>
+
+    {
+      sets.map((s, k) => (
+        <table class="data" data-set={s.id} hidden={k > 0}>
+          <caption>
+            {label}, {s.label} (self-assessed, 0 to {max})
+          </caption>
+          <tbody>
+            {s.axes.map((a) => (
+              <tr>
+                <th scope="row">{a.name}</th>
+                <td>{a.value}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ))
+    }
+  </div>
+</div>
+
+<noscript>
+  <style is:inline>
+    [data-radar] [data-radar-tabs] {
+      display: none !important;
+    }
+    [data-radar] table.data,
+    [data-radar] table.data[hidden] {
+      position: static !important;
+      display: table !important;
+      width: 100% !important;
+      height: auto !important;
+      margin-top: var(--sp-4) !important;
+      overflow: visible !important;
+      clip: auto !important;
+      white-space: normal !important;
+    }
+  </style>
+</noscript>
+
+<script>
+  import { bindTablist } from '@/lib/tablist';
+  import { radarPoint, radarPoints } from '@/lib/radar';
+  import { durationMs } from '@/lib/tokens';
+
+  // easeOutBack with a small overshoot, the JS twin of --ease-ember
+  const ease = (t: number) => {
+    const c = 0.9;
+    return 1 + (c + 1) * (t - 1) ** 3 + c * (t - 1) ** 2;
+  };
+
+  function init() {
+    document.querySelectorAll<HTMLElement>('[data-radar]').forEach((root) => {
+      if (root.dataset.bound) return;
+      root.dataset.bound = '1';
+      const list = root.querySelector<HTMLElement>('[data-radar-tabs]');
+      if (!list) return;
+
+      const max = Number(root.dataset.max);
+      const panel = root.querySelector<HTMLElement>('.panel')!;
+      const shapes = [...root.querySelectorAll<SVGPolygonElement>('[data-shape]')];
+      const pips = [...root.querySelectorAll<SVGRectElement>('[data-pip]')];
+      const labels = [...root.querySelectorAll<HTMLElement>('.labels')];
+      const tables = [...root.querySelectorAll<HTMLElement>('table.data')];
+      const valuesOf = (tab: HTMLElement) => JSON.parse(tab.dataset.values ?? '[]') as number[];
+
+      let current = valuesOf(list.querySelector('[aria-selected="true"]')!);
+      let frame = 0;
+
+      function draw(values: number[]) {
+        const pts = radarPoints(values, max);
+        shapes.forEach((s) => s.setAttribute('points', pts));
+        pips.forEach((p, i) => {
+          const [x, y] = radarPoint(i, values.length, values[i]! / max);
+          p.setAttribute('x', (x - 3).toFixed(2));
+          p.setAttribute('y', (y - 3).toFixed(2));
+          p.setAttribute('transform', `rotate(45 ${x.toFixed(2)} ${y.toFixed(2)})`);
+        });
+      }
+
+      function morph(target: number[]) {
+        cancelAnimationFrame(frame);
+        const from = current;
+        const dur = durationMs('--dur-morph');
+        const start = performance.now();
+        const step = (now: number) => {
+          const t = dur > 0 ? Math.min(1, (now - start) / dur) : 1;
+          const k = ease(t);
+          current = from.map((v, i) => v + (target[i]! - v) * k);
+          draw(current);
+          if (t < 1) frame = requestAnimationFrame(step);
+          else current = target;
+        };
+        frame = requestAnimationFrame(step);
+      }
+
+      bindTablist(list, (i, tab) => {
+        morph(valuesOf(tab));
+        labels.forEach((l, j) => l.classList.toggle('on', j === i));
+        tables.forEach((t, j) => (t.hidden = j !== i));
+        panel.setAttribute('aria-labelledby', tab.id);
+      });
+      document.addEventListener('astro:before-swap', () => cancelAnimationFrame(frame), {
+        once: true,
+      });
+    });
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+  .radar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+    color: var(--c-ember);
+  }
+  .sets {
+    display: flex;
+    gap: var(--sp-1);
+    border: var(--stroke) solid var(--c-line);
+    padding: 3px;
+  }
+  .set {
+    min-height: var(--target);
+    min-width: 6rem;
+    padding: 0 var(--sp-4);
+    border: var(--stroke) solid transparent;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-text-dim);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+  .set:hover {
+    color: var(--c-bone);
+  }
+  .set[aria-selected='true'] {
+    color: var(--c-ember);
+    border-color: var(--c-ember-deep);
+    background: var(--c-ember-wash);
+  }
+
+  .panel {
+    width: 100%;
+    max-width: 30rem;
+  }
+  .stage {
+    position: relative;
+  }
+  svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  svg :is(circle, line, polygon, rect) {
+    vector-effect: non-scaling-stroke;
+  }
+  .astrolabe circle,
+  .astrolabe line {
+    stroke: var(--c-line-strong);
+    stroke-width: 1;
+  }
+  .astrolabe .inner {
+    stroke-dasharray: 2 3;
+  }
+  .grid polygon,
+  .grid line {
+    stroke: var(--c-line);
+    stroke-width: 1;
+  }
+  .grid .outer {
+    stroke: var(--c-line-strong);
+  }
+  .shape {
+    fill: var(--c-ember);
+    fill-opacity: 0.16;
+    stroke: var(--c-ember);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+  .shape-glow {
+    fill: var(--c-ember);
+    fill-opacity: 0.22;
+    stroke: var(--c-ember);
+    stroke-width: 3;
+    opacity: 0.7;
+  }
+  .pips rect {
+    fill: var(--c-void);
+    stroke: var(--c-ember);
+    stroke-width: 1.25;
+  }
+  .heart {
+    fill: var(--c-ember);
+  }
+
+  .labels {
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+  }
+  .labels.on {
+    opacity: 1;
+  }
+  .axis {
+    position: absolute;
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2);
+    white-space: nowrap;
+    line-height: var(--lh-tight);
+  }
+  .axis-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: 0.04em;
+    color: var(--c-bone);
+  }
+  .axis-value {
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+  /* how each label hangs off its vertex */
+  .side-nw {
+    transform: translate(-100%, -100%);
+  }
+  .side-ne {
+    transform: translate(0, -100%);
+  }
+  .side-e,
+  .side-w {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    transform: translate(0, -50%);
+  }
+  .side-w {
+    align-items: flex-end;
+    transform: translate(-100%, -50%);
+  }
+  .side-sw {
+    transform: translate(-100%, 0);
+  }
+
+  .data {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-collapse: collapse;
+    font-size: var(--fs-16);
+  }
+  .data caption {
+    padding-bottom: var(--sp-1);
+    text-align: left;
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .data th {
+    text-align: left;
+    font-weight: 400;
+    color: var(--c-bone);
+  }
+  .data td {
+    text-align: right;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .data :is(th, td) {
+    padding: 2px 0;
+    border-bottom: var(--stroke) dotted var(--c-line-strong);
+  }
+</style>

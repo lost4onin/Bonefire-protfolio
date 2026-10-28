@@ -1,0 +1,311 @@
+---
+/**
+ * Tabs: an ARIA tablist with one panel per tab, each panel filled by the named slot of the same id
+ * (`<div slot="chronicle">`). Click, ←/→/Home/End, and with `keys` also Q / E from anywhere on the
+ * page (only one `keys` tablist per page), like a game menu. On mouse devices the Q / E keycaps
+ * beside the tabs can be clicked too. `/about#chronicle` opens that tab.
+ * Without JS every panel shows, stacked under its own heading, so no fact is ever hidden.
+ * Used on /about (Status / Chronicle / Oaths); specimen in /lab.
+ */
+import KeyPrompt from './KeyPrompt.astro';
+
+interface Props {
+  id: string; // prefix for element ids, unique on the page
+  label: string; // accessible name of the tablist
+  tabs: readonly { id: string; name: string; plain?: string }[];
+  keys?: boolean;
+  class?: string;
+}
+const { id, label, tabs, keys = false, class: className } = Astro.props;
+// slot names must be static in markup, so the panels are rendered here
+const panels = await Promise.all(
+  tabs.map((t) => (Astro.slots.has(t.id) ? Astro.slots.render(t.id) : '')),
+);
+---
+
+<div class:list={['tabs', className]} data-tabs={id} data-keys={keys ? '' : undefined}>
+  <div class="bar" data-tabbar>
+    {
+      keys && (
+        <span class="bumper" data-tab-step="-1" data-cursor="point" aria-hidden="true">
+          <KeyPrompt keys={['Q']} />
+        </span>
+      )
+    }
+    <div role="tablist" aria-label={label} class="list">
+      {
+        tabs.map((t, i) => (
+          <button
+            type="button"
+            role="tab"
+            class="tab"
+            id={`${id}-tab-${t.id}`}
+            aria-controls={`${id}-panel-${t.id}`}
+            aria-selected={i === 0 ? 'true' : 'false'}
+            tabindex={i === 0 ? 0 : -1}
+            data-tab={t.id}
+          >
+            <span class="name">{t.name}</span>
+            {t.plain && <span class="plain">{t.plain}</span>}
+          </button>
+        ))
+      }
+    </div>
+    {
+      keys && (
+        <span class="bumper" data-tab-step="1" data-cursor="point" aria-hidden="true">
+          <KeyPrompt keys={['E']} />
+        </span>
+      )
+    }
+  </div>
+  <span class="bar-rule" aria-hidden="true"></span>
+
+  {
+    tabs.map((t, i) => (
+      <section
+        role="tabpanel"
+        class="panel"
+        id={`${id}-panel-${t.id}`}
+        aria-labelledby={`${id}-tab-${t.id}`}
+        hidden={i > 0}
+        data-panel={t.id}
+      >
+        <h2 class="panel-heading">
+          {t.name}
+          {t.plain && (
+            <span class="panel-plain">
+              <span class="sr-only">, </span>
+              {t.plain}
+            </span>
+          )}
+        </h2>
+        <Fragment set:html={panels[i]} />
+      </section>
+    ))
+  }
+</div>
+
+<noscript>
+  <style is:inline>
+    [data-tabs] [data-tabbar],
+    [data-tabs] .bar-rule {
+      display: none !important;
+    }
+    [data-tabs] [data-panel][hidden] {
+      display: block !important;
+    }
+    [data-tabs] [data-panel] + [data-panel] {
+      margin-top: var(--sp-8) !important;
+    }
+    [data-tabs] .panel-heading {
+      position: static !important;
+      width: auto !important;
+      height: auto !important;
+      margin: 0 0 var(--sp-5) !important;
+      overflow: visible !important;
+      clip: auto !important;
+      white-space: normal !important;
+    }
+  </style>
+</noscript>
+
+<script>
+  import { bindTablist, type Tablist } from '@/lib/tablist';
+
+  const isTyping = (el: EventTarget | null) =>
+    el instanceof HTMLElement &&
+    (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+  const bound = new WeakMap<HTMLElement, Tablist>();
+
+  function init() {
+    document.querySelectorAll<HTMLElement>('[data-tabs]').forEach((root) => {
+      if (bound.has(root)) return;
+      const list = root.querySelector<HTMLElement>('[role="tablist"]')!;
+      const panels = [...root.querySelectorAll<HTMLElement>(':scope > [data-panel]')];
+      const ctl = bindTablist(list, (i) => {
+        panels.forEach((p, j) => (p.hidden = j !== i));
+        root.dispatchEvent(new CustomEvent('tabs:change', { detail: { index: i } }));
+      });
+      bound.set(root, ctl);
+
+      root
+        .querySelectorAll<HTMLElement>('[data-tab-step]')
+        .forEach((b) =>
+          b.addEventListener('click', () => ctl.select(ctl.index + Number(b.dataset.tabStep))),
+        );
+
+      const fromHash = ctl.tabs.findIndex((t) => `#${t.dataset.tab}` === location.hash);
+      if (fromHash > 0) ctl.select(fromHash);
+    });
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+
+  // Q / E switch the page's `keys` tablist from anywhere. Delegated on `document`: bind once.
+  if (!window.__tabKeysBound) {
+    window.__tabKeysBound = true;
+    document.addEventListener('keydown', (e) => {
+      if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || isTyping(e.target)) return;
+      const step = { q: -1, e: 1 }[e.key.toLowerCase()];
+      if (!step || document.querySelector('dialog[open]')) return;
+      const root = document.querySelector<HTMLElement>('[data-tabs][data-keys]');
+      const ctl = root && bound.get(root);
+      if (!ctl) return;
+      e.preventDefault();
+      // keep keyboard users where they are, unless they were already on the tabs
+      ctl.select(
+        ctl.index + step,
+        root.contains(document.activeElement) &&
+          document.activeElement?.getAttribute('role') === 'tab',
+      );
+    });
+  }
+</script>
+
+<style>
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4);
+  }
+  .bumper {
+    display: inline-flex;
+    cursor: pointer;
+    opacity: 0.8;
+    transition: opacity var(--dur-fast) var(--ease-out);
+  }
+  .bumper:hover {
+    opacity: 1;
+  }
+  .list {
+    display: flex;
+    flex: 0 1 auto;
+    gap: var(--sp-2);
+  }
+  .tab {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* names stay level when a plain label wraps */
+    gap: 2px;
+    min-height: var(--target);
+    min-width: 7.5rem;
+    padding: var(--sp-2) var(--sp-4) var(--sp-3);
+    border: 0;
+    background: transparent;
+    color: var(--c-text-dim);
+    cursor: pointer;
+    transition: color var(--dur-base) var(--ease-out);
+  }
+  .tab:hover {
+    color: var(--c-bone);
+  }
+  .name {
+    font-family: var(--font-display);
+    font-size: var(--fs-20);
+    letter-spacing: var(--tracking-display);
+  }
+  .plain {
+    font-size: var(--fs-14);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  /* the active tab: ember name, a lit lozenge sitting on the rule below */
+  .tab[aria-selected='true'] {
+    color: var(--c-ember);
+  }
+  .tab[aria-selected='true'] .name {
+    text-shadow: 0 0 14px var(--c-ember-glow);
+  }
+  .tab::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--sp-2) * -1 - 4px);
+    width: 9px;
+    height: 9px;
+    background: var(--c-void);
+    border: var(--stroke) solid var(--c-line-strong);
+    transform: translateX(-50%) rotate(45deg) scale(0.6);
+    transition:
+      transform var(--dur-base) var(--ease-ember),
+      border-color var(--dur-base) var(--ease-out),
+      background var(--dur-base) var(--ease-out);
+  }
+  .tab[aria-selected='true']::after {
+    border-color: var(--c-ember);
+    background: var(--c-ember);
+    box-shadow: 0 0 10px var(--c-ember);
+    transform: translateX(-50%) rotate(45deg) scale(1);
+  }
+  .bar-rule {
+    display: block;
+    height: var(--stroke);
+    margin: var(--sp-2) 0 var(--sp-6);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--c-line-strong) 15%,
+      var(--c-line-strong) 85%,
+      transparent
+    );
+  }
+
+  .panel:not([hidden]) {
+    animation: panel-in var(--dur-base) var(--ease-out);
+  }
+  .panel-heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    font-size: var(--fs-32);
+    color: var(--c-ember);
+  }
+  .panel-plain {
+    margin-left: var(--sp-3);
+    font-family: var(--font-body);
+    font-size: var(--fs-18);
+    font-style: italic;
+    letter-spacing: 0;
+    color: var(--c-text-dim);
+  }
+  @keyframes panel-in {
+    from {
+      opacity: 0;
+      transform: translateY(var(--sp-2));
+    }
+  }
+
+  @media (hover: none) {
+    .bumper {
+      display: none;
+    }
+  }
+  @media (max-width: 560px) {
+    .list {
+      flex: 1;
+      gap: 0;
+    }
+    .tab {
+      flex: 1;
+      min-width: 0;
+      padding-inline: var(--sp-1);
+    }
+    .name {
+      font-size: var(--fs-18);
+      letter-spacing: 0.06em;
+    }
+    .plain {
+      text-align: center;
+      text-wrap: balance;
+    }
+  }
+</style>

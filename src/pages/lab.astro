@@ -13,8 +13,12 @@ import Frame from '@/components/ui/Frame.astro';
 import TravelMenu from '@/components/ui/TravelMenu.astro';
 import TitleCard from '@/components/ui/TitleCard.astro';
 import Loader from '@/components/world/Loader.astro';
+import Tabs from '@/components/ui/Tabs.astro';
+import StatList from '@/components/ui/StatList.astro';
+import Radar from '@/components/ui/Radar.astro';
 import { cursors } from '@/data/cursor';
 import { bonfires } from '@/data/site';
+import { attributes, radar, scales } from '@/data/pilgrim';
 
 if (import.meta.env.PROD) return Astro.redirect('/');
 
@@ -78,6 +82,7 @@ const colors = [
             <KeyPrompt keys={['ESC']} label="Back" />
             <KeyPrompt keys={['Q', 'E']} label="Switch tab" />
             <KeyPrompt keys={['M']} label="Travel" />
+            <KeyPrompt keys={['ESC']} label="Back (link, key unbound here)" href="/" bind={false} />
           </div>
         </div>
       </div>
@@ -90,6 +95,43 @@ const colors = [
           </dl>
         </Frame>
       </div>
+    </section>
+
+    <section>
+      <h2 class="label">Stat list (hover or focus a † row; on touch the note sits under it)</h2>
+      <div class="stats">
+        <StatList id="lab-stats" name="Attributes" plain="Soft skills" items={attributes} />
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Radar (tabs morph the polygon)</h2>
+      <Radar
+        id="lab-radar"
+        label="Affinities"
+        sets={[
+          { id: 'software', ...radar.software },
+          { id: 'ai', ...radar.ai },
+        ]}
+        max={scales.radar.max}
+      />
+    </section>
+
+    <section>
+      <h2 class="label">Tabs (Q / E only on pages that ask for them, like /about)</h2>
+      <Tabs
+        id="lab-tabs"
+        label="Specimen tabs"
+        tabs={[
+          { id: 'one', name: 'Status', plain: 'Profile' },
+          { id: 'two', name: 'Chronicle', plain: 'Experience' },
+          { id: 'three', name: 'Oaths', plain: 'Communities' },
+        ]}
+      >
+        <p slot="one" class="dim">First panel. ←/→ move between tabs, Home/End jump.</p>
+        <p slot="two" class="dim">Second panel. It fades in when chosen.</p>
+        <p slot="three" class="dim">Third panel. Without JS all three show, stacked.</p>
+      </Tabs>
     </section>
 
     <section>

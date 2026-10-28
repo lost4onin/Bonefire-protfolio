@@ -71,13 +71,14 @@ Spec: PLAN.md §1, §8 · ASSETS.md budgets · match the `Bonfire2D` silhouette 
 
 Spec: PLAN.md §3 · reference `docs/references/ref-liesofp-status-window.png` + `ref-hex-radar.png` · data `src/data/pilgrim.ts`
 
-- [ ] 📄 Akrem reviews and adjusts every number in `pilgrim.ts` (attributes, abilities, radar) and the briefing text
-- [ ] Layout like the reference: **portrait left** (`/images/pilgrim-portrait.webp`, large, bleeding into the dark; subtle pointer parallax), **stat columns right**, **top bar** counters (`topBar`), `[ESC] Back` prompt bottom-right
-- [ ] Columns: Briefing · Attributes · Combat Abilities · Tongues — Lies of P list style (label left, value right, hairline under section titles). Each value has a tooltip/`title` with its `note` when present
-- [ ] **Radar** (`components/ui/Radar.astro`): inline SVG hexagon, 5 grid rings, 6 labelled axes, ember polygon with low-opacity fill; tabs **Software / AI** morph the polygon (CSS/GSAP tween of points). Accessible: a visually-hidden `<table>` of the same values
-- [ ] Small "?" explaining "self-assessed, 1–20 / 0–10" (honesty rule)
-- [ ] Tabs **Status / Chronicle / Oaths** with `Q` / `E` keys + clickable tabs (`role="tablist"`). Chronicle = timeline from `chronicle`; Oaths = covenant cards from `oaths`
-- [ ] Mobile: portrait becomes a top banner (cropped to face), columns stack, radar full width
+- [ ] 📄 Akrem reviews and adjusts every number in `pilgrim.ts` (attributes, abilities, radar) and the briefing text. _Kept as-is for now by Akrem's call (2026-10-28); open until he gives the go._
+- [x] Layout like the reference: **portrait left** (`/images/pilgrim-portrait.webp`, large, bleeding into the dark; subtle pointer parallax), **stat columns right**, **top bar** counters (`topBar`), `[ESC] Back` prompt bottom-right (footer prompt bar, as a real link)
+- [x] Columns: Briefing · Attributes · Combat Abilities · Tongues — Lies of P list style (label left, value right, hairline under section titles). Each value has a tooltip/`title` with its `note` when present (`StatList`: † mark, tooltip on hover/focus, inline line on touch)
+- [x] **Radar** (`components/ui/Radar.astro`): inline SVG hexagon, 5 grid rings, 6 labelled axes, ember polygon with low-opacity fill; tabs **Software / AI** morph the polygon (rAF tween, no GSAP). Accessible: a visually-hidden `<table>` of the same values
+- [x] Small "?" explaining "self-assessed, 1–20 / 0–10" (honesty rule)
+- [x] Tabs **Status / Chronicle / Oaths** with `Q` / `E` keys + clickable tabs (`role="tablist"`, `components/ui/Tabs.astro`). Chronicle = timeline from `chronicle`; Oaths = covenant cards from `oaths`
+- [x] Mobile: portrait becomes a top banner (cropped to face), columns stack, radar full width
+- [x] Works without JS (all panels stacked, radar values as tables); reduced motion: no parallax, embers or morph. Lighthouse 12 on the production build: desktop and mobile 100 / 100 / 100 / 100
 
 ## M5 — Hall of Works inventory (`/works`) 🧱🎨📄 (Day 7)
 

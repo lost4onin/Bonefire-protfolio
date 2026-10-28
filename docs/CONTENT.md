@@ -10,15 +10,16 @@ Each fact lives in **one** place in code. Pages read from there.
 
 ## Where each fact lives
 
-| Fact                                                                          | Code location                   | Shown on                                         |
-| ----------------------------------------------------------------------------- | ------------------------------- | ------------------------------------------------ |
-| Name, role, school, email, GitHub, LinkedIn, CV path, "seeking" line, summary | `src/data/site.ts` → `site`     | Header/footer (all), `/cv`, `/about`, `/contact` |
-| Section names, lore lines, routes                                             | `src/data/site.ts` → `bonfires` | Travel menu, title cards                         |
-| Top bar, briefing, attributes, abilities, tongues, radar, chronicle, oaths    | `src/data/pilgrim.ts`           | `/about`, `/cv` (chronicle, tongues)             |
-| Skills, titles, ranks, slots                                                  | `src/data/armoury.ts`           | `/armoury`, `/cv`                                |
-| Loading tips                                                                  | `src/data/tips.ts`              | Loader                                           |
-| Projects + case studies                                                       | `src/content/relics/*.md`       | `/works`, `/works/[slug]`, `/cv`                 |
-| Hackathons                                                                    | `src/content/bosses/*.md`       | `/victories`, `/cv`                              |
+| Fact                                                                          | Code location                                                | Shown on                                         |
+| ----------------------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------ |
+| Name, role, school, email, GitHub, LinkedIn, CV path, "seeking" line, summary | `src/data/site.ts` → `site`                                  | Header/footer (all), `/cv`, `/about`, `/contact` |
+| Section names, lore lines, routes                                             | `src/data/site.ts` → `bonfires`                              | Travel menu, title cards                         |
+| Top bar, briefing, attributes, abilities, tongues, radar, chronicle, oaths    | `src/data/pilgrim.ts`                                        | `/about`, `/cv` (chronicle, tongues)             |
+| `/about` block names + plain labels, lore lines, "self-assessed" note, scales | `src/data/pilgrim.ts` → `sections`, `selfAssessed`, `scales` | `/about`                                         |
+| Skills, titles, ranks, slots                                                  | `src/data/armoury.ts`                                        | `/armoury`, `/cv`                                |
+| Loading tips                                                                  | `src/data/tips.ts`                                           | Loader                                           |
+| Projects + case studies                                                       | `src/content/relics/*.md`                                    | `/works`, `/works/[slug]`, `/cv`                 |
+| Hackathons                                                                    | `src/content/bosses/*.md`                                    | `/victories`, `/cv`                              |
 
 ## CV facts (verbatim source)
 

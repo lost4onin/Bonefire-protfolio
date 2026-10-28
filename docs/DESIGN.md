@@ -20,6 +20,7 @@ Rules:
 
 - **One accent.** Ember is the only colour. No blues, greens or reds in UI (fire art may use its own reds and oranges).
 - Ember marks _where the player's attention should go_: selected item, focus, primary action, active tab. If everything is ember, nothing is.
+- `--c-ember-wash` (ember at 8%) is the hover / selected-row background (stat rows, radar tabs).
 - Text is bone or muted. Never pure white (`#fff`) or pure grey.
 - Light comes from a source. Glows (`--c-ember-glow`) appear only near a fire or a selected element.
 
@@ -52,7 +53,11 @@ Rules:
 | ----------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | `TextBox`         | Dialogue, intro text, notifications, menus          | Black 94%, 1px light edge, inner double edge, 20px text                                                   |
 | `RuneButton`      | Actions                                             | `rune` = framed ember (max one per view), `ghost` = quiet                                                 |
-| `KeyPrompt`       | `[ESC] Back`, `[Q][E] Switch tab`, `[M] Travel`     | Hidden on touch devices                                                                                   |
+| `KeyPrompt`       | `[ESC] Back`, `[Q][E] Switch tab`, `[M] Travel`     | Hidden on touch devices. With `href` it is a real link and its key follows it (`← label` on touch)        |
+| `SectionHead`     | Every block title on `/about`                       | In-world name + plain label + hairline starting on an ember lozenge; slot for a right-hand aside          |
+| `StatList`        | Attributes, abilities, tongues (later: Armoury)     | `label ······ value` on dotted leaders; `note` → † + tooltip (hover/focus) or inline line (touch)         |
+| `Radar`           | `/about` Affinities                                 | Flat-top hex, astrolabe ring, ember polygon; sets become tabs that morph it; HTML labels; data `<table>`  |
+| `Tabs`            | `/about` Status / Chronicle / Oaths                 | ARIA tablist, ←/→, optional page-wide `Q`/`E`; panels from named slots; all panels show without JS        |
 | `Frame`           | Panels: stats, item descriptions, cards             | Optional title rule, Lies of P style                                                                      |
 | `Bonfire2D`       | Loader (≈72px), fallback (240px)                    | The 3D fire must match its silhouette                                                                     |
 | `Fog`             | Behind every world page                             | `light` / `normal` / `thick`                                                                              |
@@ -61,7 +66,7 @@ Rules:
 | `TitleCard`       | Warp, `/lab`                                        | In-world name, ember hairline, plain label                                                                |
 | `Loader` / `Warp` | `components/world/`                                 | Loader only when a page calls `__loader.expect()`; warp on every internal page change                     |
 
-Planned (see MILESTONES.md): `Radar`, `Tabs`, `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
+Planned (see MILESTONES.md): `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
 
 **Placeholder status.** Palette, fonts and the rules in this doc stand. The _visuals_ of the current components and pages are placeholders, and a major UI pass is coming once Akrem's models and final names arrive. The cursor is final: Akrem's 2D gauntlet pack (`Cursor`, hotspot at the fingertip). See CLAUDE.md → "Things in flux".
 
@@ -76,6 +81,8 @@ Planned (see MILESTONES.md): `Radar`, `Tabs`, `RelicSlot`, `ItemPanel`, `BossCar
 | Whole warp              | **≤ `--dur-warp` 2000ms**                                          | Long enough to feel the journey (Akrem, 2026-10-28). Reduced motion: 150ms cross-fade.                                     |
 | Warp phases             | `--dur-warp-in` 500 · `--dur-warp-hold` 800 · `--dur-warp-out` 600 | Fade to black · title card · page fades in (1900ms, the prototype's rhythm)                                                |
 | Cursor idle             | `--dur-idle` 5000ms                                                | Gauntlet still this long → flexing fingers until it moves                                                                  |
+| Radar morph             | `--dur-morph` 520ms                                                | rAF tween with a small overshoot (JS twin of `--ease-ember`); 0 with reduced motion                                        |
+| Firelight flicker       | `--dur-flicker` 5200ms                                             | Ambient glow loop on `/about` (stepped opacity)                                                                            |
 | Banner, tips            | `--dur-banner` 2000ms, `--dur-tip` 3500ms                          | JS timers read tokens via `durationMs()` (`src/lib/tokens.ts`), never `parseFloat` (the minifier turns `300ms` into `.3s`) |
 
 - Ambient motion (fog drift, flicker, embers) is slow and continuous. UI motion is quick and purposeful.

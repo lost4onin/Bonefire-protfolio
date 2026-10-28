@@ -1,0 +1,890 @@
+---
+/**
+ * /about — "The Pilgrim": a Lies of P–style status window (docs/references/ref-liesofp-status-window.png).
+ * Desktop: the portrait stands in the scene layer on the left, under the fog and grain, lit by an
+ * unseen fire, with a slight pointer parallax; the sheet sits on the right: name plate, top-bar
+ * counters, then tabs Status / Chronicle / Oaths (Q / E). Phones: the portrait becomes a banner
+ * cropped to the face and everything stacks. `[ESC] Back` returns to the first flame.
+ * Every fact comes from src/data/pilgrim.ts and src/data/site.ts; nothing is typed in here.
+ */
+import WorldLayout from '@/layouts/WorldLayout.astro';
+import KeyPrompt from '@/components/ui/KeyPrompt.astro';
+import Tabs from '@/components/ui/Tabs.astro';
+import SectionHead from '@/components/ui/SectionHead.astro';
+import StatList from '@/components/ui/StatList.astro';
+import Radar from '@/components/ui/Radar.astro';
+import Frame from '@/components/ui/Frame.astro';
+import { site, bonfires } from '@/data/site';
+import {
+  sections,
+  scales,
+  selfAssessed,
+  topBar,
+  briefing,
+  attributes,
+  abilities,
+  tongues,
+  radar,
+  chronicle,
+  oaths,
+} from '@/data/pilgrim';
+
+const place = bonfires.find((b) => b.id === 'pilgrim')!;
+const portrait = {
+  src: '/images/pilgrim-portrait.webp',
+  width: 910,
+  height: 1400,
+  alt: `Portrait of ${site.name}`,
+};
+
+const tabs = (['status', 'chronicle', 'oaths'] as const).map((id) => ({ id, ...sections[id] }));
+const radarSets = (['software', 'ai'] as const).map((id) => ({ id, ...radar[id] }));
+const tongueRows = tongues.map((t) => ({
+  name: t.name,
+  value: t.level,
+  note: 'note' in t ? t.note : undefined,
+}));
+const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+
+// Etched glyphs for the top-bar counters (24×24, stroked in currentColor).
+const glyphs: Record<(typeof topBar)[number]['icon'], string[]> = {
+  level: ['M12 2.5l2 2.5-2 2.5-2-2.5z', 'M5 14l7-4.5 7 4.5', 'M5 19.5l7-4.5 7 4.5'],
+  bosses: [
+    'M4 4l11 11',
+    'M12.5 17.5l5-5',
+    'M16.5 16.5l3 3',
+    'M20 4L9 15',
+    'M11.5 17.5l-5-5',
+    'M7.5 16.5l-3 3',
+  ],
+  allies: ['M6 21.5V2.5', 'M4.5 2.5h3', 'M6 4h12.5l-3 4 3 4H6'],
+  tongues: [
+    'M20 3.5C13.5 4 8.5 9 7 16c6.5-1 11.5-6 13-12.5z',
+    'M7 16l-3 4.5',
+    'M7 16c2.5-3.5 6-7 9.5-9.5',
+  ],
+};
+
+// deterministic pseudo-random values (same on every build)
+const rand = (i: number, n: number) => {
+  const x = Math.sin(i * 12.9898 + n * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+const embers = Array.from({ length: 16 }, (_, i) => ({
+  left: 8 + rand(i, 1) * 44, // vw
+  size: 1.5 + rand(i, 2) * 2.5,
+  dur: 9 + rand(i, 3) * 9,
+  delay: -rand(i, 4) * 18,
+  dx: (rand(i, 5) - 0.5) * 18, // vw
+}));
+// a wax seal's uneven rim
+const sealRim = Array.from({ length: 40 }, (_, i) => {
+  const a = (i / 40) * Math.PI * 2;
+  const r = 45 + rand(i, 7) * 5;
+  return `${(50 + r * Math.cos(a)).toFixed(1)}% ${(50 + r * Math.sin(a)).toFixed(1)}%`;
+}).join(', ');
+---
+
+<WorldLayout
+  title={place.section}
+  description={`${site.name}, ${site.role.toLowerCase()} at INSAT: summary, skills, experience, education and communities.`}
+>
+  <div slot="scene" class="scene" data-pilgrim-scene>
+    <div class="glow" aria-hidden="true"></div>
+    <img
+      class="portrait"
+      src={portrait.src}
+      width={portrait.width}
+      height={portrait.height}
+      alt={portrait.alt}
+      fetchpriority="high"
+      decoding="async"
+    />
+    <div class="embers" aria-hidden="true">
+      {
+        embers.map((e) => (
+          <span
+            style={`--x:${e.left.toFixed(1)}vw;--s:${e.size.toFixed(1)}px;--d:${e.dur.toFixed(1)}s;--delay:${e.delay.toFixed(1)}s;--dx:${e.dx.toFixed(1)}vw`}
+          />
+        ))
+      }
+    </div>
+  </div>
+
+  <KeyPrompt slot="prompts" keys={['ESC']} label="Back" href="/" />
+
+  <div class="pilgrim">
+    <div class="banner">
+      <img src={portrait.src} width={portrait.width} height={portrait.height} alt={portrait.alt} />
+    </div>
+
+    <div class="sheet">
+      <header class="head">
+        <div class="plate">
+          <p class="eyebrow">
+            <span class="lore">{place.name}</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <span class="plain">{place.section}</span>
+          </p>
+          <h1 class="name">{site.name}</h1>
+          <p class="epithet">{site.roleLore}</p>
+          <p class="role">{site.role} · {site.school.split(' — ')[0]}</p>
+        </div>
+
+        <dl class="counters">
+          {
+            topBar.map((c) => (
+              <div class="counter">
+                <dt>
+                  <span class="c-label">{c.label}</span>
+                  <span class="c-hint">{c.hint}</span>
+                </dt>
+                <dd>
+                  <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    {glyphs[c.icon].map((d) => (
+                      <path d={d} />
+                    ))}
+                  </svg>
+                  <span class="c-value num">{c.value}</span>
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </header>
+
+      <Tabs id="pilgrim" label={`${place.name}: sections`} tabs={tabs} keys class="sheet-tabs">
+        <div slot="status" class="status">
+          <section class="briefing" aria-labelledby="briefing-title">
+            <SectionHead
+              name={sections.briefing.name}
+              plain={sections.briefing.plain}
+              id="briefing-title"
+            />
+            {briefing.map((p) => <p>{p}</p>)}
+          </section>
+
+          <StatList
+            id="attributes"
+            class="attributes"
+            name={sections.attributes.name}
+            plain={sections.attributes.plain}
+            items={attributes}
+          >
+            <details class="hint" data-hint>
+              <summary>
+                <span class="hint-mark" aria-hidden="true">?</span>
+                <span class="hint-text">{selfAssessed.short}</span>
+              </summary>
+              <p class="hint-box">{selfAssessed.detail}</p>
+            </details>
+          </StatList>
+          <StatList
+            id="abilities"
+            class="abilities"
+            name={sections.abilities.name}
+            plain={sections.abilities.plain}
+            items={abilities}
+          />
+          <StatList
+            id="tongues"
+            class="tongues"
+            name={sections.tongues.name}
+            plain={sections.tongues.plain}
+            items={tongueRows}
+          />
+
+          <section class="affinities" aria-labelledby="affinities-title">
+            <SectionHead
+              name={sections.radar.name}
+              plain={sections.radar.plain}
+              id="affinities-title"
+            />
+            <Radar
+              id="affinity"
+              label={sections.radar.name}
+              sets={radarSets}
+              max={scales.radar.max}
+            />
+          </section>
+        </div>
+
+        <div slot="chronicle">
+          <p class="panel-lore">{sections.chronicle.lore}</p>
+          <ol class="chronicle">
+            {
+              chronicle.map((c, i) => (
+                <li class="deed">
+                  <span class="numeral" aria-hidden="true">
+                    <span>{roman[i]}</span>
+                  </span>
+                  <h3 class="deed-title">{c.title}</h3>
+                  <p class="when num">{c.when}</p>
+                  <p class="where">{c.where}</p>
+                  {c.points.length > 0 && (
+                    <ul class="points">
+                      {c.points.map((p) => (
+                        <li>{p}</li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+
+        <div slot="oaths">
+          <p class="panel-lore">{sections.oaths.lore}</p>
+          <ul class="oaths">
+            {
+              oaths.map((o) => (
+                <li>
+                  <Frame class="oath">
+                    <span class="seal" style={`clip-path: polygon(${sealRim})`} aria-hidden="true">
+                      <span class="seal-letter">{o.name.charAt(0)}</span>
+                    </span>
+                    <h3 class="covenant">{o.covenant}</h3>
+                    <span class="oath-rule" aria-hidden="true" />
+                    <p class="org">{o.name}</p>
+                    <p class="oath-role">{o.role}</p>
+                  </Frame>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </Tabs>
+    </div>
+  </div>
+</WorldLayout>
+
+<script>
+  function init() {
+    const scene = document.querySelector<HTMLElement>('[data-pilgrim-scene]');
+    if (!scene || scene.dataset.bound) return;
+    scene.dataset.bound = '1';
+    const ac = new AbortController();
+    const { signal } = ac;
+
+    // portrait parallax: desktop pointers only, never with reduced motion
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (fine && !still) {
+      let frame = 0;
+      let x = 0;
+      let y = 0;
+      window.addEventListener(
+        'pointermove',
+        (e) => {
+          x = e.clientX / window.innerWidth - 0.5;
+          y = e.clientY / window.innerHeight - 0.5;
+          if (frame) return;
+          frame = requestAnimationFrame(() => {
+            frame = 0;
+            scene.style.setProperty('--mx', x.toFixed(3));
+            scene.style.setProperty('--my', y.toFixed(3));
+          });
+        },
+        { passive: true, signal },
+      );
+    }
+
+    // the "?" closes on ESC (before [ESC] Back can see the key) and on a click elsewhere
+    const hint = document.querySelector<HTMLDetailsElement>('[data-hint]');
+    if (hint) {
+      document.addEventListener(
+        'keydown',
+        (e) => {
+          if (e.key !== 'Escape' || !hint.open) return;
+          e.preventDefault();
+          hint.open = false;
+          hint.querySelector('summary')?.focus();
+        },
+        { capture: true, signal },
+      );
+      document.addEventListener(
+        'click',
+        (e) => {
+          if (hint.open && !hint.contains(e.target as Node)) hint.open = false;
+        },
+        { signal },
+      );
+    }
+
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+  /* portrait width on desktop: as tall as the screen allows, never more than 40% of its width */
+  .scene,
+  .pilgrim {
+    --pw: min(54vh, 40vw);
+  }
+
+  /* ── Scene (desktop): portrait, firelight, embers ───────────────── */
+  .scene {
+    position: absolute;
+    inset: 0;
+    display: none;
+    overflow: hidden;
+  }
+  .portrait {
+    position: absolute;
+    left: calc(var(--gutter) * 0.5);
+    bottom: 0;
+    width: var(--pw);
+    height: auto;
+    max-width: none;
+    -webkit-mask-image: linear-gradient(90deg, var(--c-void) 72%, transparent);
+    mask-image: linear-gradient(90deg, var(--c-void) 72%, transparent);
+    transform: translate3d(calc(var(--mx, 0) * -18px), calc(var(--my, 0) * -10px), 0);
+    transition: transform var(--dur-fade) var(--ease-out);
+  }
+  /* the unseen fire, off to the right of the pilgrim */
+  .glow {
+    position: absolute;
+    left: calc(var(--pw) * 0.45);
+    bottom: -10vh;
+    width: calc(var(--pw) * 1.5);
+    height: 95vh;
+    background: radial-gradient(
+      closest-side,
+      color-mix(in srgb, var(--c-ember) 16%, transparent),
+      color-mix(in srgb, var(--c-ember-deep) 6%, transparent) 55%,
+      transparent
+    );
+    transform: translate3d(calc(var(--mx, 0) * 10px), calc(var(--my, 0) * 6px), 0);
+    transition: transform var(--dur-fade) var(--ease-out);
+    animation: flicker var(--dur-flicker) steps(1) infinite;
+  }
+  .embers {
+    position: absolute;
+    inset: 0;
+    transform: translate3d(calc(var(--mx, 0) * -32px), calc(var(--my, 0) * -16px), 0);
+    transition: transform var(--dur-fade) var(--ease-out);
+  }
+  .embers span {
+    position: absolute;
+    left: var(--x);
+    bottom: -2vh;
+    width: var(--s);
+    height: var(--s);
+    background: var(--c-ember);
+    box-shadow: 0 0 6px 1px var(--c-ember-deep);
+    opacity: 0;
+    animation: rise var(--d) linear var(--delay) infinite;
+  }
+  @keyframes rise {
+    0% {
+      opacity: 0;
+      transform: translate(0, 0) scale(1);
+    }
+    10% {
+      opacity: 0.9;
+    }
+    70% {
+      opacity: 0.5;
+    }
+    100% {
+      opacity: 0;
+      transform: translate(var(--dx), -85vh) scale(0.4);
+    }
+  }
+  @keyframes flicker {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    13% {
+      opacity: 0.86;
+    }
+    27% {
+      opacity: 0.97;
+    }
+    44% {
+      opacity: 0.82;
+    }
+    61% {
+      opacity: 0.95;
+    }
+    78% {
+      opacity: 0.88;
+    }
+  }
+
+  /* ── Phones and tablets: the portrait as a banner, cropped to the face ── */
+  .banner {
+    position: relative;
+    height: min(78vw, 420px);
+    margin: calc(var(--sp-6) * -1) calc(var(--gutter) * -1) 0;
+    overflow: hidden;
+    background: radial-gradient(ellipse 60% 70% at 62% 45%, var(--c-ember-wash), transparent 70%);
+  }
+  .banner img {
+    width: 100%;
+    max-width: 34rem;
+    height: 100%;
+    margin: 0 auto;
+    object-fit: cover;
+    object-position: 50% 8%;
+    -webkit-mask-image: linear-gradient(180deg, var(--c-void) 55%, transparent 98%);
+    mask-image: linear-gradient(180deg, var(--c-void) 55%, transparent 98%);
+  }
+
+  @media (min-width: 960px) {
+    .scene {
+      display: block;
+    }
+    .banner {
+      display: none;
+    }
+    .pilgrim {
+      padding-left: calc(var(--pw) * 0.84);
+    }
+  }
+
+  /* ── The sheet ─────────────────────────────────────────────────── */
+  .sheet {
+    container-type: inline-size;
+    max-width: 66rem;
+    margin: 0 auto;
+  }
+  .head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--sp-5) var(--sp-7);
+    margin-bottom: var(--sp-6);
+  }
+  @media (max-width: 959px) {
+    .head {
+      position: relative;
+      margin-top: calc(var(--sp-8) * -1);
+    }
+  }
+  .eyebrow {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2);
+    margin-bottom: var(--sp-2);
+  }
+  .eyebrow .lore {
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-ember);
+  }
+  .eyebrow .sep,
+  .eyebrow .plain {
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .name {
+    font-size: clamp(var(--fs-32), 4.6vw, var(--fs-56));
+    color: var(--c-bone);
+    text-shadow: 0 0 28px color-mix(in srgb, var(--c-ember) 18%, transparent);
+  }
+  .epithet {
+    margin-top: var(--sp-2);
+    font-size: var(--fs-20);
+    font-style: italic;
+    color: var(--c-ember);
+  }
+  .role {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+
+  /* top-bar counters: glyph · value · label, the plain hint under it */
+  .counters {
+    display: grid;
+    grid-template-columns: repeat(4, auto);
+    margin: 0;
+  }
+  .counter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: var(--sp-2);
+    padding: var(--sp-1) var(--sp-4) var(--sp-2);
+    border-bottom: var(--stroke) solid var(--c-line-strong);
+  }
+  .counter + .counter {
+    border-left: var(--stroke) solid var(--c-line);
+  }
+  .counter dd {
+    order: -1;
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2);
+    margin: 0;
+  }
+  .glyph {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: var(--c-ember);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    align-self: center;
+  }
+  .c-value {
+    font-size: var(--fs-24);
+    line-height: var(--lh-tight);
+    color: var(--c-bone);
+  }
+  .counter dt {
+    display: flex;
+    flex-direction: column;
+  }
+  .c-label {
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: 0.06em;
+    color: var(--c-bone);
+  }
+  .c-hint {
+    max-width: 16ch;
+    font-size: var(--fs-14);
+    font-style: italic;
+    line-height: var(--lh-snug);
+    color: var(--c-text-dim);
+  }
+  @container (max-width: 820px) {
+    .head {
+      align-items: stretch;
+    }
+    .counters {
+      width: 100%;
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .counter + .counter {
+      border-left: 0;
+    }
+    .counter:nth-child(even) {
+      border-left: var(--stroke) solid var(--c-line);
+    }
+    .c-hint {
+      max-width: none;
+    }
+  }
+
+  /* ── Status panel ──────────────────────────────────────────────── */
+  .status {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'brief' 'attr' 'abil' 'radar' 'tong';
+    gap: var(--sp-7);
+  }
+  @container (min-width: 600px) {
+    .status {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-areas: 'brief brief' 'attr abil' 'radar radar' 'tong tong';
+      column-gap: var(--sp-7);
+    }
+  }
+  @container (min-width: 860px) {
+    .status {
+      grid-template-areas: 'brief brief' 'attr abil' 'tong radar';
+    }
+  }
+  .briefing {
+    grid-area: brief;
+  }
+  .briefing p {
+    max-width: 70ch;
+    font-size: var(--fs-18);
+  }
+  .briefing p + p {
+    margin-top: var(--sp-3);
+  }
+  /* an illuminated initial on the first paragraph */
+  .briefing :global(.sh) + p::first-letter {
+    float: left;
+    margin: 0.06em var(--sp-2) 0 0;
+    font-family: var(--font-display);
+    font-size: 3.4em;
+    line-height: 0.8;
+    color: var(--c-ember);
+    text-shadow: 0 0 18px var(--c-ember-glow);
+  }
+  .attributes {
+    grid-area: attr;
+  }
+  .abilities {
+    grid-area: abil;
+  }
+  .tongues {
+    grid-area: tong;
+    align-self: start;
+  }
+  .affinities {
+    grid-area: radar;
+  }
+
+  /* the "?": self-assessed note */
+  .hint {
+    position: relative;
+  }
+  .hint summary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+    min-height: var(--target);
+    /* full touch target, without making this heading taller than its neighbour's */
+    margin: calc(var(--sp-3) * -1) 0;
+    list-style: none;
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+    cursor: pointer;
+  }
+  .hint summary::-webkit-details-marker {
+    display: none;
+  }
+  .hint summary:hover,
+  .hint[open] summary {
+    color: var(--c-bone);
+  }
+  .hint-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 20px;
+    height: 20px;
+    font-style: normal;
+    font-size: var(--fs-14);
+    color: var(--c-ember);
+    position: relative;
+  }
+  .hint-mark::before {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border: var(--stroke) solid var(--c-ember);
+    transform: rotate(45deg);
+  }
+  .hint-box {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    z-index: var(--z-overlay);
+    width: min(22rem, 80vw);
+    padding: var(--sp-3) var(--sp-4);
+    background: var(--c-box);
+    border: var(--stroke) solid var(--c-box-edge);
+    box-shadow:
+      inset 0 0 0 3px var(--c-void),
+      inset 0 0 0 4px var(--c-line),
+      0 16px 40px var(--c-scrim);
+    font-size: var(--fs-16);
+    line-height: var(--lh-body);
+    color: var(--c-bone);
+  }
+
+  /* ── Chronicle ─────────────────────────────────────────────────── */
+  .panel-lore {
+    margin-bottom: var(--sp-6);
+    text-align: center;
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .panel-lore::before,
+  .panel-lore::after {
+    content: '';
+    display: inline-block;
+    width: var(--sp-7);
+    height: var(--stroke);
+    margin: 0 var(--sp-3);
+    vertical-align: middle;
+    background: linear-gradient(90deg, transparent, var(--c-ember-deep));
+  }
+  .panel-lore::after {
+    transform: scaleX(-1);
+  }
+  .chronicle {
+    position: relative;
+    display: grid;
+    gap: var(--sp-6);
+    max-width: 48rem;
+    margin: 0 auto;
+    padding: 0;
+    list-style: none;
+  }
+  .chronicle::before {
+    content: '';
+    position: absolute;
+    left: 1.25rem;
+    top: var(--sp-4);
+    bottom: 0;
+    width: var(--stroke);
+    background: linear-gradient(180deg, var(--c-ember), var(--c-line-strong) 25%, transparent);
+  }
+  .deed {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    column-gap: var(--sp-5);
+  }
+  .deed > :not(.numeral) {
+    grid-column: 2;
+  }
+  .numeral {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    color: var(--c-ember);
+  }
+  .numeral::before {
+    content: '';
+    position: absolute;
+    inset: 0.45rem;
+    background: var(--c-void);
+    border: var(--stroke) solid var(--c-ember-deep);
+    transform: rotate(45deg);
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+  .numeral span {
+    position: relative;
+  }
+  .deed:hover .numeral::before {
+    border-color: var(--c-ember);
+    box-shadow: 0 0 12px var(--c-ember-glow);
+  }
+  .when {
+    grid-row: 1;
+    padding-top: var(--sp-2);
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .deed-title {
+    grid-row: 2;
+    margin-top: var(--sp-1);
+    font-size: var(--fs-24);
+    color: var(--c-bone);
+  }
+  .where {
+    grid-row: 3;
+    margin-top: var(--sp-1);
+    color: var(--c-ember);
+  }
+  .points {
+    grid-row: 4;
+    margin: var(--sp-3) 0 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--sp-2);
+    max-width: 64ch;
+  }
+  .points li {
+    position: relative;
+    padding-left: var(--sp-5);
+  }
+  .points li::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    border: var(--stroke) solid var(--c-ember-deep);
+    transform: rotate(45deg);
+  }
+
+  /* ── Oaths ─────────────────────────────────────────────────────── */
+  .oaths {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    gap: var(--sp-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .oaths li {
+    display: flex;
+  }
+  .oath {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--sp-6) var(--sp-5);
+    text-align: center;
+    transition: border-color var(--dur-base) var(--ease-out);
+  }
+  .oath:hover {
+    border-color: var(--c-line-strong);
+  }
+  /* old sealing wax: dark burnt ember, a soft sheen top-left, a pressed ring and an embossed initial */
+  .seal {
+    --wax: color-mix(in srgb, var(--c-ember-deep) 62%, var(--c-void));
+    --wax-dark: color-mix(in srgb, var(--c-ember-deep) 28%, var(--c-void));
+    --wax-lit: color-mix(in srgb, var(--c-ember-deep) 80%, var(--c-ember));
+    display: grid;
+    place-items: center;
+    width: 4.25rem;
+    height: 4.25rem;
+    margin-bottom: var(--sp-4);
+    background:
+      radial-gradient(circle at 32% 26%, var(--wax-lit), transparent 34%),
+      radial-gradient(circle at 50% 50%, var(--wax) 0 48%, var(--wax-dark) 100%);
+    transition: filter var(--dur-base) var(--ease-out);
+  }
+  .oath:hover .seal {
+    filter: brightness(1.2);
+  }
+  .seal-letter {
+    display: grid;
+    place-items: center;
+    width: 2.9rem;
+    height: 2.9rem;
+    border-radius: 50%;
+    background: radial-gradient(circle at 50% 60%, var(--wax-dark), var(--wax) 75%);
+    box-shadow:
+      inset 0 2px 3px var(--wax-dark),
+      0 1px 0 var(--wax-lit);
+    font-family: var(--font-display);
+    font-size: var(--fs-24);
+    line-height: 1;
+    color: var(--wax-lit);
+    text-shadow: 0 -1px 0 var(--wax-dark);
+  }
+  .covenant {
+    font-size: var(--fs-24);
+    color: var(--c-ember);
+  }
+  .oath-rule {
+    width: var(--sp-8);
+    height: var(--stroke);
+    margin: var(--sp-3) 0;
+    background: linear-gradient(90deg, transparent, var(--c-line-strong), transparent);
+  }
+  .org {
+    font-size: var(--fs-18);
+    color: var(--c-bone);
+  }
+  .oath-role {
+    margin-top: var(--sp-1);
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+</style>

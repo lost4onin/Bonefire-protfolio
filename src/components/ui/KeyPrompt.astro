@@ -1,20 +1,70 @@
 ---
 /**
  * Game-style key prompt, like Lies of P's "[ESC] Close".
- * Display only; the actual key handling lives with the feature that owns it.
- * Hidden on touch devices (no keyboard to press).
+ * Display only, unless `href` is set: then it is a real link and pressing its (first) key follows it,
+ * e.g. `<KeyPrompt keys={['ESC']} label="Back" href="/" />` on /about. The key is ignored while
+ * someone types, a dialog or popover is open, or another handler already used it.
+ * `bind={false}` keeps the link but not the key (style guide specimens).
+ * Hidden on touch devices (no keyboard to press); a linked prompt stays there as a plain "← label" link.
  */
 interface Props {
   keys: string[]; // e.g. ['Q', 'E'] or ['ESC']
-  label: string;
+  label?: string;
+  href?: string;
+  bind?: boolean;
 }
-const { keys, label } = Astro.props;
+const { keys, label, href, bind = true } = Astro.props;
+// KeyboardEvent.key for the names shown on the keycaps
+const eventKey = (k: string) => ({ ESC: 'Escape' })[k] ?? k;
 ---
 
-<span class="kp">
-  {keys.map((k) => <kbd>{k}</kbd>)}
-  <span class="kp-label">{label}</span>
-</span>
+{
+  href ? (
+    <a class="kp kp-link" href={href} data-key={bind ? eventKey(keys[0]!) : undefined}>
+      {keys.map((k) => (
+        <kbd>{k}</kbd>
+      ))}
+      <span class="kp-touch" aria-hidden="true">
+        ←
+      </span>
+      {label && <span class="kp-label">{label}</span>}
+    </a>
+  ) : (
+    <span class="kp">
+      {keys.map((k) => (
+        <kbd>{k}</kbd>
+      ))}
+      {label && <span class="kp-label">{label}</span>}
+    </span>
+  )
+}
+
+<script>
+  const isTyping = (el: EventTarget | null) =>
+    el instanceof HTMLElement &&
+    (el.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName));
+  const popoverOpen = () => {
+    try {
+      return !!document.querySelector(':popover-open');
+    } catch {
+      return false; // browser without popovers
+    }
+  };
+
+  // Delegated on `document` (survives view transitions): bind once.
+  if (!window.__keyPromptBound) {
+    window.__keyPromptBound = true;
+    document.addEventListener('keydown', (e) => {
+      if (e.defaultPrevented || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      if (isTyping(e.target) || document.querySelector('dialog[open]') || popoverOpen()) return;
+      const key = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+      const link = document.querySelector<HTMLAnchorElement>(`a[data-key="${CSS.escape(key)}"]`);
+      if (!link) return;
+      e.preventDefault();
+      link.click();
+    });
+  }
+</script>
 
 <style>
   .kp {
@@ -23,6 +73,22 @@ const { keys, label } = Astro.props;
     gap: var(--sp-2);
     color: var(--c-text-dim);
     font-size: var(--fs-16);
+  }
+  .kp-link {
+    min-height: var(--target);
+    text-decoration: none;
+    transition: color var(--dur-fast) var(--ease-out);
+  }
+  .kp-link:hover,
+  .kp-link:focus-visible {
+    color: var(--c-bone);
+  }
+  .kp-link:hover kbd,
+  .kp-link:focus-visible kbd {
+    border-color: var(--c-ember);
+  }
+  .kp-touch {
+    display: none;
   }
   kbd {
     display: inline-grid;
@@ -38,13 +104,20 @@ const { keys, label } = Astro.props;
     box-shadow:
       inset 0 0 0 2px var(--c-void),
       inset 0 0 0 3px var(--c-stone);
+    transition: border-color var(--dur-fast) var(--ease-out);
   }
   .kp-label {
     font-family: var(--font-body);
   }
   @media (hover: none) {
-    .kp {
+    .kp:not(.kp-link) {
       display: none;
+    }
+    .kp-link kbd {
+      display: none;
+    }
+    .kp-touch {
+      display: inline;
     }
   }
 </style>

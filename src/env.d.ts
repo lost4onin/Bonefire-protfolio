@@ -16,4 +16,6 @@ interface Window {
   __travelBound?: boolean;
   __warpBound?: boolean;
   __loaderBound?: boolean;
+  __keyPromptBound?: boolean;
+  __tabKeysBound?: boolean;
 }

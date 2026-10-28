@@ -7,12 +7,43 @@
  *   Rule: a rating must be defensible in an interview. When in doubt, go lower.
  */
 
-/** Top bar — equivalent of Lies of P's Ergo / weight counters. Facts only. */
+/**
+ * Display names for every block on /about: in-world `name` + plain `plain` label (shown together),
+ * plus an optional in-world `lore` line. Rename freely here; ids and routes don't change.
+ */
+export const sections = {
+  status: { name: 'Status', plain: 'Profile' },
+  briefing: { name: 'Briefing', plain: 'Summary' },
+  attributes: { name: 'Attributes', plain: 'Soft skills' },
+  abilities: { name: 'Combat Abilities', plain: 'Technical skills' },
+  tongues: { name: 'Tongues', plain: 'Languages' },
+  radar: { name: 'Affinities', plain: 'Skill radar' },
+  chronicle: {
+    name: 'Chronicle',
+    plain: 'Experience & education',
+    lore: 'The road walked so far.',
+  },
+  oaths: { name: 'Oaths', plain: 'Communities', lore: 'Covenants sworn.' },
+} as const;
+
+/** Rating scales, and the honesty note shown behind the "?" on /about. */
+export const scales = { stat: { min: 1, max: 20 }, radar: { min: 0, max: 10 } } as const;
+export const selfAssessed = {
+  short: 'Self-assessed',
+  detail: `Every rating on this page is Akrem's own assessment, not a test score. Attributes and Combat Abilities run from ${scales.stat.min} to ${scales.stat.max}; the radar runs from ${scales.radar.min} to ${scales.radar.max}.`,
+} as const;
+
+/** Top bar — equivalent of Lies of P's Ergo / weight counters. Facts only. `icon` picks the glyph. */
 export const topBar = [
-  { label: 'Level', value: 'II', hint: 'Year of study at INSAT' },
-  { label: 'Bosses Vanquished', value: '4', hint: 'Hackathon first places' },
-  { label: 'Allies Led', value: '280+', hint: 'IEEE INSAT Computer Society members' },
-  { label: 'Tongues', value: '4', hint: 'Arabic, English, French, German' },
+  { label: 'Level', value: 'II', hint: 'Year of study at INSAT', icon: 'level' },
+  { label: 'Bosses Vanquished', value: '4', hint: 'Hackathon first places', icon: 'bosses' },
+  {
+    label: 'Allies Led',
+    value: '280+',
+    hint: 'IEEE INSAT Computer Society members',
+    icon: 'allies',
+  },
+  { label: 'Tongues', value: '4', hint: 'Arabic, English, French, German', icon: 'tongues' },
 ] as const;
 
 export const briefing = [

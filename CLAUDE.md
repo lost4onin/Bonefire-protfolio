@@ -121,4 +121,5 @@ The current UI is a **placeholder**. Major UI updates are coming, so build for c
 - ✅ **M1 Verify, version, deploy**: install and build green with no fixes, commit-msg hook active, Vercel linked by Akrem. Production: https://bonefire-protfolio.vercel.app (Deployment Protection on until launch).
 - ✅ **M2 Loading, intro, travel, warp**: loader API for M3, once-per-visitor intro, Travel menu (inline + `M` dialog, bottom sheet on phones), warp on every page change (~1.9s), gauntlet cursor state machine (pack is final, no 3D cursor).
 - ✅ **M3 3D bonfire landing**: Akrem's model + procedural fire/embers/ruins, framed onto the page's hearth, quality tiers with FPS step-down, 2D fallback (incl. software WebGL), loader for the download only. Lighthouse `/` desktop 100, mobile 96.
-- ⏭ Next: **M4** (The Pilgrim, `/about`). Keep "Things in flux" above in mind.
+- ✅ **M4 The Pilgrim (`/about`)**: Lies of P status window (portrait in the scene layer with parallax, top-bar counters, Status / Chronicle / Oaths tabs with `Q`/`E`, StatList with † notes, Software/AI radar morph, `[ESC] Back`), works without JS. Lighthouse `/about` 100 on desktop and mobile. Open: Akrem's review of the `pilgrim.ts` numbers and briefing (kept as-is for now, his call).
+- ⏭ Next: **M5** (Hall of Works, `/works`). Keep "Things in flux" above in mind.

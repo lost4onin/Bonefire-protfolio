@@ -1,0 +1,144 @@
+---
+/**
+ * Lies of P–style stat list: a SectionHead, then `label ······ value` rows on dotted leaders.
+ * A row with a `note` gets a dagger mark (†) and shows the note as a tooltip on hover or focus;
+ * on touch screens the note sits under the label instead. The note is real text inside the <dt>,
+ * so screen readers and crawlers always get it.
+ * The default slot goes to the right end of the heading (the "?" on /about).
+ * Used on /about (Attributes, Combat Abilities, Tongues); the Armoury can reuse it.
+ */
+import SectionHead from './SectionHead.astro';
+
+interface Props {
+  id: string; // heading id prefix, unique on the page
+  name: string;
+  plain?: string;
+  items: readonly { name: string; value: string | number; note?: string }[];
+  class?: string;
+}
+const { id, name, plain, items, class: className } = Astro.props;
+---
+
+<section class:list={['statlist', className]} aria-labelledby={`${id}-title`}>
+  <SectionHead name={name} plain={plain} id={`${id}-title`}><slot /></SectionHead>
+  <dl class="rows">
+    {
+      items.map((it) => (
+        <div class:list={['row', { 'has-note': it.note }]} tabindex={it.note ? 0 : undefined}>
+          <dt>
+            <span class="lbl">
+              {it.name}
+              {it.note && (
+                <sup class="mark" aria-hidden="true">
+                  †
+                </sup>
+              )}
+            </span>
+            {it.note && <span class="note">{it.note}</span>}
+          </dt>
+          <dd class="num">{it.value}</dd>
+        </div>
+      ))
+    }
+  </dl>
+</section>
+
+<style>
+  .rows {
+    margin: 0;
+  }
+  .row {
+    position: relative;
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3);
+    padding: var(--sp-1) var(--sp-2);
+    margin: 0 calc(var(--sp-2) * -1);
+    transition: background var(--dur-fast) var(--ease-out);
+  }
+  .row:hover,
+  .row:focus-visible {
+    background: linear-gradient(90deg, var(--c-ember-wash), transparent 85%);
+  }
+  .row:focus-visible {
+    outline-offset: 0;
+  }
+  dt {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+  }
+  /* the dotted leader between label and value, like an old ledger */
+  dt::after {
+    content: '';
+    order: 1;
+    flex: 1;
+    min-width: var(--sp-4);
+    margin: 0 0 0 var(--sp-3);
+    border-bottom: var(--stroke) dotted var(--c-line-strong);
+    transform: translateY(-0.3em);
+  }
+  .lbl {
+    color: var(--c-bone);
+  }
+  .mark {
+    margin-left: 2px;
+    font-size: 0.7em;
+    color: var(--c-ember);
+  }
+  dd {
+    margin: 0;
+    color: var(--c-bone);
+    text-align: right;
+  }
+  .row:hover dd,
+  .row:focus-visible dd {
+    color: var(--c-ember);
+  }
+
+  /* note: tooltip where there is hover, plain line under the label where there isn't */
+  .note {
+    order: 2;
+    font-size: var(--fs-16);
+    font-style: italic;
+    line-height: var(--lh-snug);
+    color: var(--c-text-dim);
+  }
+  @media (hover: hover) {
+    .note {
+      position: absolute;
+      left: var(--sp-2);
+      top: calc(100% + var(--sp-1));
+      z-index: var(--z-overlay);
+      width: max-content;
+      max-width: min(34ch, 100%);
+      padding: var(--sp-2) var(--sp-3);
+      background: var(--c-box);
+      border: var(--stroke) solid var(--c-box-edge);
+      box-shadow:
+        inset 0 0 0 3px var(--c-void),
+        inset 0 0 0 4px var(--c-line),
+        0 12px 32px var(--c-scrim);
+      color: var(--c-bone);
+      opacity: 0;
+      transform: translateY(calc(var(--sp-1) * -1));
+      pointer-events: none;
+      transition:
+        opacity var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+    }
+    .row:hover .note,
+    .row:focus-visible .note {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  @media (hover: none) {
+    .note {
+      flex-basis: 100%;
+      padding-top: 2px;
+    }
+  }
+</style>

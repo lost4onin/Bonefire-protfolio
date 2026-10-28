@@ -130,3 +130,14 @@ Rejected: delaying 3D until user input (the bonfire is the hook), and a separate
 ### 2026-10-28: M3: 3D fire framed onto the page, not the page onto the fire
 
 The canvas fills the screen behind the page; the camera distance and a view offset put the fire exactly where the 2D bonfire sits (`[data-hearth]`), tracked on scroll and resize. The layout, the intro and the menu are unchanged, and the 2D bonfire cross-fades out when the first 3D frame is drawn. The flames are kept below the sword's hilt so the coiled sword reads as the hero.
+
+### 2026-10-28: M4: The Pilgrim (`/about`)
+
+- **Portrait in the scene layer, not the page flow (desktop).** It sits under the CSS fog, grain and vignette, so it bleeds into the dark the way the Lies of P window does, and it stays put while the sheet scrolls. Width `min(54vh, 40vw)` keeps the head clear of the sticky header. Phones and tablets (< 960px) get the same image as an in-flow banner cropped to the face (same URL, one download).
+- **No GSAP on `/about`.** The radar morph is a ~20-line rAF tween (`--dur-morph`, an easeOutBack twin of `--ease-ember`); GSAP would have added ~25 KB to a 2D page. The page adds ~3 KB of its own JS (Tabs + Radar). Lighthouse 12 on the production build: desktop and mobile 100 / 100 / 100 / 100.
+- **Works without JS.** Tabs render every panel; inactive ones get `hidden`, and a `<noscript><style>` shows them all, stacked under their headings, and shows the radar's data tables. With JS nothing flashes (panels are hidden in the HTML).
+- **Notes (†):** a tooltip on hover/focus where there is a mouse, a line under the label on touch screens. The note is real text in the `<dt>`, so screen readers and crawlers always get it.
+- **Radar labels are HTML over the SVG**, so IM Fell stays at 16px however small the chart; flat-top hexagon like the reference. The SVG is `aria-hidden`; each data set is also a `<table>`.
+- **`[ESC] Back` goes to `/`** (closing the status window returns you to the bonfire), not `history.back()`, which could throw a visitor off the site. `KeyPrompt` gained `href`: the prompt is a real link and its key clicks it, ignored while typing or while a dialog/popover is open. M6 and the 404 reuse it.
+- **Display names and plain labels for every block** live in `pilgrim.ts` → `sections`; the "?" text in `selfAssessed`, built from `scales`. Akrem asked to keep every name and number as it is for now; the review box in MILESTONES stays open.
+- **Dynamic slot names aren't allowed in Astro**, so `Tabs` renders each panel's named slot in its frontmatter (`Astro.slots.render`).

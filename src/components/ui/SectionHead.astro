@@ -1,0 +1,81 @@
+---
+/**
+ * Section heading, Lies of P style: in-world name with its plain label beside it, then a hairline
+ * that starts on a small ember lozenge. Anything in the default slot sits at the right end
+ * (e.g. the "?" on /about). Used by StatList, Radar and the /about panels.
+ */
+interface Props {
+  name: string;
+  plain?: string;
+  level?: 2 | 3 | 4;
+  id?: string;
+  class?: string;
+}
+const { name, plain, level = 3, id, class: className } = Astro.props;
+const Tag = `h${level}` as 'h2' | 'h3' | 'h4';
+---
+
+<div class:list={['sh', className]}>
+  <Tag class="sh-title" id={id}>
+    <span class="sh-name">{name}</span>
+    {
+      plain && (
+        <span class="sh-plain">
+          <span class="sr-only">, </span>
+          {plain}
+        </span>
+      )
+    }
+  </Tag>
+  <div class="sh-aside"><slot /></div>
+  <span class="sh-rule" aria-hidden="true"></span>
+</div>
+
+<style>
+  .sh {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: var(--sp-2) var(--sp-4);
+    margin-bottom: var(--sp-3);
+  }
+  .sh-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--sp-3);
+    letter-spacing: 0.06em;
+  }
+  .sh-name {
+    font-size: var(--fs-20);
+    color: var(--c-bone);
+  }
+  .sh-plain {
+    font-family: var(--font-body);
+    font-size: var(--fs-16);
+    font-style: italic;
+    letter-spacing: 0;
+    color: var(--c-text-dim);
+  }
+  .sh-aside:empty {
+    display: none;
+  }
+  .sh-rule {
+    grid-column: 1 / -1;
+    position: relative;
+    height: var(--stroke);
+    background: linear-gradient(90deg, var(--c-line-strong), var(--c-line) 70%, transparent);
+  }
+  .sh-rule::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 7px;
+    height: 7px;
+    background: var(--c-void);
+    border: var(--stroke) solid var(--c-ember);
+    transform: translate(-50%, -50%) rotate(45deg);
+    box-shadow: 0 0 6px var(--c-ember-glow);
+  }
+</style>
