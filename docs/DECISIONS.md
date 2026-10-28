@@ -88,3 +88,27 @@ Chosen over "Bonfire / Dark Souls" by Livio Arango: 28k vs 602k triangles, clean
 ### 2026-10-28: `npm run models` runs the gltf-transform CLI through node
 
 Spawning `node_modules/.bin/gltf-transform.cmd` fails with EINVAL on Windows since Node 20.12 (CVE-2024-27980 fix), so the script now runs `@gltf-transform/cli/bin/cli.js` with `process.execPath`. Works on every OS.
+
+### 2026-10-28: M2: the gauntlet cursor pack is final; no 3D cursor
+
+Akrem confirmed the 2D pack is the final cursor. `components/world/Cursor.astro` (renamed from `SwordCursor`) is a state machine on one element (`data-state`: idle, point, press, grab, grabbable, wait during warps, text over fields) with per-state art and hotspots from `src/data/cursor.ts`. The 3D gauntlet trial in MILESTONES M2 is marked superseded. At Akrem's request, CLAUDE.md (non-negotiable #5, "Things in flux"), PLAN, DESIGN and ASSETS were updated to match. The pack's source is credited generically ("fan-made"); Akrem asked not to be asked for it again.
+
+### 2026-10-28: M2: warp on every internal page change; loader only when there is work
+
+Akrem's call: the warp covers all navigation (including "Skip the journey" → `/cv`), so it lives in `BaseLayout` with a named `transition:persist="warp"` (an unnamed persist got a different id in `PlainLayout`, so the veil was dropped). Astro's own animation is off (`transition:animate="none"` on `<html>`). Pages without their own entry get a title card from `otherPlaces`/`placeFor()` in `site.ts`. The loader shows only after a page calls `window.__loader.expect()` (M3's scene), so 2D pages never show it. Built with CSS + small inline scripts; GSAP not needed. Measured on the production build: ~1.17s per warp; 270ms cross-fade, no title card, with reduced motion.
+
+### 2026-10-28: M2: JS reads duration tokens through `durationMs()`
+
+The production CSS minifier rewrites `300ms` as `.3s`; `parseFloat` then read 0.3ms and every JS timer collapsed to zero in production only. `src/lib/tokens.ts` → `durationMs()` handles both units.
+
+### 2026-10-28: M2: landing travel menu is inline HTML; the `M` menu is a native `<dialog>`
+
+Inline on `/` so the navigation is real, crawlable HTML that works without JS; elsewhere a `<dialog>` with `showModal()` for the focus trap and ESC, focus returned manually. Also fixed (pre-existing): the 2D bonfire glow widened phones' layout viewport to ~500px; `main` now clips horizontal overflow.
+
+### 2026-10-28: M2 polish: longer warp, idle gauntlet, solid header and footer
+
+Akrem's calls after trying M2:
+
+- **Warp ≈ 1.9s** (500 in · 800 title · 600 out, the prototype's rhythm; `--dur-warp` max raised from 1.2s to 2s) so the journey is felt. Reduced motion is still a 150ms cross-fade. Trade-off accepted: "Skip the journey" → `/cv` also takes ~1.9s.
+- **Cursor:** still for `--dur-idle` (5s) → `idling` (the pack's flexing animation) until it moves. A long press only becomes `grab` over `[data-cursor="grab"]` or during a native drag; over anything else it stays `press`.
+- **Header and footer are solid bars in the page flow** (`position: sticky`, `--c-void` + hairline), replacing fixed gradient overlays that content showed through. On phones only the footer stays pinned (compact: status line, then email · CV · Credits), and the header scrolls away, so the chrome doesn't take a third of the screen.

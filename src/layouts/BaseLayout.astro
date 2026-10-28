@@ -2,12 +2,14 @@
 /**
  * BaseLayout — <html>/<head> only: meta, fonts, global CSS, view transitions.
  * Every page goes through WorldLayout (game pages) or PlainLayout (/cv), which wrap this.
+ * Also hosts the warp (every internal page change), so it persists across both layouts.
  */
 import '@fontsource/im-fell-english-sc';
 import '@fontsource-variable/crimson-pro';
 import '@fontsource-variable/crimson-pro/wght-italic.css';
 import '@/styles/global.css';
 import { ClientRouter } from 'astro:transitions';
+import Warp from '@/components/world/Warp.astro';
 import { site } from '@/data/site';
 
 interface Props {
@@ -29,7 +31,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang="en">
+<html lang="en" transition:animate="none">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -52,5 +54,6 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   </head>
   <body>
     <slot />
+    <Warp />
   </body>
 </html>

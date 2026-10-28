@@ -1,8 +1,9 @@
 ---
 /**
  * WorldLayout — every in-game page (/, /about, /works, /victories, /armoury, /contact, /404).
- * Provides: atmosphere (fog/grain/vignette), sword cursor, header (identity + Skip the journey),
- * footer (seeking status + email + CV + credits), key-prompt bar, main landmark.
+ * Provides: atmosphere (fog/grain/vignette), cursor, header (identity + Travel + Skip the journey),
+ * footer (seeking status + email + CV + credits), key-prompt bar, main landmark, Travel dialog (`M`),
+ * loading screen (only shown when a page calls window.__loader.expect()).
  *
  * Recruiter rule: name, role, email, CV and "Skip the journey" are visible on EVERY world page.
  *
@@ -13,8 +14,10 @@
  */
 import BaseLayout from './BaseLayout.astro';
 import Fog from '@/components/world/Fog.astro';
-import SwordCursor from '@/components/world/SwordCursor.astro';
+import Cursor from '@/components/world/Cursor.astro';
 import KeyPrompt from '@/components/ui/KeyPrompt.astro';
+import TravelMenu from '@/components/ui/TravelMenu.astro';
+import Loader from '@/components/world/Loader.astro';
 import { site, recruiterRoute } from '@/data/site';
 
 interface Props {
@@ -35,39 +38,50 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
   <Fog density={fog} />
   <div class="scene-layer"><slot name="scene" /></div>
 
-  <header class:list={['chrome', 'top', { quiet: quietChrome }]}>
-    <a class="id" href="/" aria-label={`${site.name}, home`}>
-      <span class="id-name">{site.name}</span>
-      <span class="id-role">{site.role}</span>
-    </a>
-    <nav aria-label="Shortcuts" class="shortcuts">
-      <a class="skip-journey" href={recruiterRoute.href}>{recruiterRoute.label} →</a>
-    </nav>
-  </header>
+  <div class="world">
+    <header class:list={['chrome', 'top', { quiet: quietChrome }]}>
+      <a class="id" href="/" aria-label={`${site.name}, home`}>
+        <span class="id-name">{site.name}</span>
+        <span class="id-role">{site.role}</span>
+      </a>
+      <nav aria-label="Shortcuts" class="shortcuts">
+        <button
+          type="button"
+          class="travel-open"
+          data-travel-open
+          aria-haspopup="dialog"
+          aria-controls="travel-dialog">Travel</button
+        >
+        <a class="skip-journey" href={recruiterRoute.href}>{recruiterRoute.label} →</a>
+      </nav>
+    </header>
 
-  <main id="main" class="content">
-    <slot />
-  </main>
+    <main id="main" class="content">
+      <slot />
+    </main>
 
-  <footer class:list={['chrome', 'bottom', { quiet: quietChrome }]}>
-    <p class="status">
-      <span class="dot" aria-hidden="true"></span>
-      {site.seeking}
-    </p>
-    <div class="prompts">
-      <slot name="prompts" />
-      <KeyPrompt keys={['M']} label="Travel" />
-    </div>
-    <p class="contact">
-      <a href={`mailto:${site.email}`}>{site.email}</a>
-      <span aria-hidden="true">·</span>
-      <a href={site.links.cv} download>CV (PDF)</a>
-      <span aria-hidden="true">·</span>
-      <a href="/credits">Credits</a>
-    </p>
-  </footer>
+    <footer class:list={['chrome', 'bottom', { quiet: quietChrome }]}>
+      <p class="status">
+        <span class="dot" aria-hidden="true"></span>
+        {site.seeking}
+      </p>
+      <div class="prompts">
+        <slot name="prompts" />
+        <KeyPrompt keys={['M']} label="Travel" />
+      </div>
+      <p class="contact">
+        <a href={`mailto:${site.email}`}>{site.email}</a>
+        <span aria-hidden="true">·</span>
+        <a href={site.links.cv} download>CV (PDF)</a>
+        <span aria-hidden="true">·</span>
+        <a href="/credits">Credits</a>
+      </p>
+    </footer>
+  </div>
 
-  <SwordCursor />
+  <TravelMenu variant="modal" />
+  <Loader />
+  <Cursor />
 </BaseLayout>
 
 <style>
@@ -76,17 +90,26 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
     inset: 0;
     z-index: var(--z-world);
   }
+  /* header · main · footer, all in the flow. Header and footer are solid bars pinned (sticky) to the
+     top and bottom of the screen, so content never shows through or ends up behind them.
+     Phones: only the footer stays pinned (email + CV); the header scrolls away to save space. */
+  .world {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
   .content {
     position: relative;
     z-index: var(--z-content);
-    min-height: 100dvh;
-    padding: calc(var(--sp-9) + var(--sp-4)) var(--gutter) calc(var(--sp-9) + var(--sp-4));
+    flex: 1;
+    /* glows and art may spill past the edge visually, but must never widen the page on phones */
+    overflow-x: clip;
+    padding: var(--sp-6) var(--gutter) var(--sp-7);
   }
   .chrome {
-    position: fixed;
-    left: 0;
-    right: 0;
+    position: sticky;
     z-index: var(--z-chrome);
+    background: var(--c-void);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -104,11 +127,11 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
   }
   .top {
     top: 0;
-    background: linear-gradient(180deg, rgb(6 5 5 / 0.85), transparent);
+    border-bottom: var(--stroke) solid var(--c-line);
   }
   .bottom {
     bottom: 0;
-    background: linear-gradient(0deg, rgb(6 5 5 / 0.85), transparent);
+    border-top: var(--stroke) solid var(--c-line);
     font-size: var(--fs-16);
     color: var(--c-text-dim);
   }
@@ -130,6 +153,27 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
     font-style: italic;
     font-size: var(--fs-16);
     color: var(--c-text-dim);
+  }
+  .shortcuts {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-5);
+  }
+  .travel-open {
+    min-height: var(--target);
+    padding: 0 var(--sp-3);
+    border: var(--stroke) solid var(--c-line-strong);
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-bone);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out);
+  }
+  .travel-open:hover,
+  .travel-open:focus-visible {
+    border-color: var(--c-ember);
   }
   .skip-journey {
     display: inline-flex;
@@ -187,9 +231,24 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
     .prompts {
       display: none;
     }
+    .top {
+      position: relative;
+    }
+    .top,
     .bottom {
       padding-top: var(--sp-3);
       padding-bottom: var(--sp-3);
+    }
+    /* compact footer: status line, then email · CV · Credits on one row */
+    .bottom {
+      gap: 0 var(--sp-4);
+    }
+    .contact {
+      gap: 0 var(--sp-3);
+      font-size: var(--fs-14);
+    }
+    .contact [aria-hidden='true'] {
+      display: none;
     }
   }
 </style>

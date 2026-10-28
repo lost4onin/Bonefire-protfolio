@@ -1,0 +1,111 @@
+---
+/**
+ * Warp: every internal page change fades to black, shows the destination's title card, then the
+ * new page fades in. Lives in BaseLayout with `transition:persist`, so it covers all pages.
+ * Timing comes from tokens: --dur-warp-in + --dur-warp-hold + --dur-warp-out ≤ --dur-warp (2s).
+ * Reduced motion: the tokens shrink it to a 150ms cross-fade and the title card is hidden.
+ * Emits `ff:warp` on document with detail 'start' | 'end' (the cursor shows its wait state).
+ * Astro's own page animation is turned off (`transition:animate="none"` on <html>), the veil does it.
+ */
+import TitleCard from '@/components/ui/TitleCard.astro';
+---
+
+<div id="warp" class="warp" aria-hidden="true" transition:persist="warp">
+  <div class="veil"></div>
+  <TitleCard class="warp-title" />
+</div>
+
+<script>
+  import { durationMs } from '@/lib/tokens';
+  import { placeFor } from '@/data/site';
+
+  const wait = (t: number) => new Promise((r) => setTimeout(r, t));
+  const emit = (detail: 'start' | 'end') =>
+    document.dispatchEvent(new CustomEvent('ff:warp', { detail }));
+
+  let endTimer = 0;
+
+  if (!window.__warpBound) {
+    window.__warpBound = true;
+
+    document.addEventListener('astro:before-preparation', (e) => {
+      const warp = document.getElementById('warp');
+      if (!warp) return;
+      const place = placeFor(e.to.pathname);
+      warp.querySelector('[data-tc-name]')!.textContent = place.name;
+      warp.querySelector('[data-tc-section]')!.textContent = place.section;
+
+      clearTimeout(endTimer);
+      warp.dataset.phase = 'in';
+      emit('start');
+
+      // Swap only once the veil is black and the title card has been seen.
+      const load = e.loader;
+      const minimum = durationMs('--dur-warp-in') + durationMs('--dur-warp-hold');
+      e.loader = async () => {
+        await Promise.all([load(), wait(minimum)]);
+      };
+    });
+
+    document.addEventListener('astro:after-swap', () => {
+      const warp = document.getElementById('warp');
+      if (!warp || warp.dataset.phase !== 'in') return;
+      warp.dataset.phase = 'out';
+      endTimer = window.setTimeout(() => {
+        delete warp.dataset.phase;
+        emit('end');
+      }, durationMs('--dur-warp-out'));
+    });
+  }
+</script>
+
+<style>
+  .warp {
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-veil);
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  .warp[data-phase='in'] {
+    pointer-events: auto; /* no clicks land on the old page mid-warp */
+  }
+  .veil {
+    position: absolute;
+    inset: 0;
+    background: var(--c-void);
+    opacity: 0;
+    transition: opacity var(--dur-warp-out) var(--ease-in-out);
+  }
+  .warp[data-phase='in'] .veil {
+    opacity: 1;
+    transition-duration: var(--dur-warp-in);
+  }
+  .warp :global(.warp-title) {
+    position: relative;
+    opacity: 0;
+    transition: opacity var(--dur-warp-out) var(--ease-out);
+  }
+  .warp[data-phase='in'] :global(.warp-title) {
+    opacity: 1;
+    transition-duration: var(--dur-base);
+    transition-delay: calc(var(--dur-warp-in) * 0.6);
+  }
+  .warp[data-phase='in'] :global(.tc-name) {
+    animation: breathe var(--dur-warp) var(--ease-out) both;
+  }
+  @keyframes breathe {
+    from {
+      letter-spacing: var(--tracking-display);
+    }
+    to {
+      letter-spacing: var(--tracking-label);
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .warp :global(.warp-title) {
+      display: none;
+    }
+  }
+</style>

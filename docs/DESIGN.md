@@ -48,29 +48,35 @@ Rules:
 
 ## 4. Components (in `src/components/ui`)
 
-| Component     | Use                                             | Notes                                                     |
-| ------------- | ----------------------------------------------- | --------------------------------------------------------- |
-| `TextBox`     | Dialogue, intro text, notifications, menus      | Black 94%, 1px light edge, inner double edge, 20px text   |
-| `RuneButton`  | Actions                                         | `rune` = framed ember (max one per view), `ghost` = quiet |
-| `KeyPrompt`   | `[ESC] Back`, `[Q][E] Switch tab`, `[M] Travel` | Hidden on touch devices                                   |
-| `Frame`       | Panels: stats, item descriptions, cards         | Optional title rule, Lies of P style                      |
-| `Bonfire2D`   | Loader (≈72px), fallback (240px)                | The 3D fire must match its silhouette                     |
-| `Fog`         | Behind every world page                         | `light` / `normal` / `thick`                              |
-| `SwordCursor` | Desktop only                                    | Hotspot = blade tip                                       |
+| Component         | Use                                                 | Notes                                                                                                     |
+| ----------------- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `TextBox`         | Dialogue, intro text, notifications, menus          | Black 94%, 1px light edge, inner double edge, 20px text                                                   |
+| `RuneButton`      | Actions                                             | `rune` = framed ember (max one per view), `ghost` = quiet                                                 |
+| `KeyPrompt`       | `[ESC] Back`, `[Q][E] Switch tab`, `[M] Travel`     | Hidden on touch devices                                                                                   |
+| `Frame`           | Panels: stats, item descriptions, cards             | Optional title rule, Lies of P style                                                                      |
+| `Bonfire2D`       | Loader (≈72px), fallback (240px)                    | The 3D fire must match its silhouette                                                                     |
+| `Fog`             | Behind every world page                             | `light` / `normal` / `thick`                                                                              |
+| `Cursor`          | Desktop only (`components/world/`)                  | Gauntlet pack; `data-state` idle/point/press/grab/grabbable/wait/text; hotspots from `src/data/cursor.ts` |
+| `TravelMenu`      | Landing (inline) and every world page (dialog, `M`) | Name + plain label + lore line; bottom sheet on phones                                                    |
+| `TitleCard`       | Warp, `/lab`                                        | In-world name, ember hairline, plain label                                                                |
+| `Loader` / `Warp` | `components/world/`                                 | Loader only when a page calls `__loader.expect()`; warp on every internal page change                     |
 
-Planned (see MILESTONES.md): `Loader`, `TravelMenu`, `TitleCard`, `Radar`, `Tabs`, `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
+Planned (see MILESTONES.md): `Radar`, `Tabs`, `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
 
-**Placeholder status.** Palette, fonts and the rules in this doc stand. The _visuals_ of the current components and pages are placeholders, and a major UI pass is coming once Akrem's models and final names arrive. `SwordCursor` will become a **gauntlet cursor** with states `idle` / `point` / `press` / `grab` (Akrem's model, trialled as a live 3D cursor with a sprite fallback if it's slow; desktop only, hotspot at the fingertip). See CLAUDE.md → "Things in flux".
+**Placeholder status.** Palette, fonts and the rules in this doc stand. The _visuals_ of the current components and pages are placeholders, and a major UI pass is coming once Akrem's models and final names arrive. The cursor is final: Akrem's 2D gauntlet pack (`Cursor`, hotspot at the fingertip). See CLAUDE.md → "Things in flux".
 
 ## 5. Motion
 
-| Moment                  | Duration                  | Easing                                             |
-| ----------------------- | ------------------------- | -------------------------------------------------- |
-| Hover, tick             | `--dur-fast` 120ms        | `--ease-out`                                       |
-| Panels, tabs, selection | `--dur-base` 240ms        | `--ease-out` / `--ease-ember` (tiny overshoot)     |
-| Fade to black           | `--dur-fade` 600ms        | `--ease-in-out`                                    |
-| Location title card     | `--dur-title` 1000ms      | fade in, letter-spacing breathes out slightly      |
-| Whole warp              | **≤ `--dur-warp` 1200ms** | The first warp is magic. The tenth must not annoy. |
+| Moment                  | Duration                                                           | Easing                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Hover, tick             | `--dur-fast` 120ms                                                 | `--ease-out`                                                                                                               |
+| Panels, tabs, selection | `--dur-base` 240ms                                                 | `--ease-out` / `--ease-ember` (tiny overshoot)                                                                             |
+| Fade to black           | `--dur-fade` 600ms                                                 | `--ease-in-out`                                                                                                            |
+| Location title card     | `--dur-title` 1000ms                                               | fade in, letter-spacing breathes out slightly                                                                              |
+| Whole warp              | **≤ `--dur-warp` 2000ms**                                          | Long enough to feel the journey (Akrem, 2026-10-28). Reduced motion: 150ms cross-fade.                                     |
+| Warp phases             | `--dur-warp-in` 500 · `--dur-warp-hold` 800 · `--dur-warp-out` 600 | Fade to black · title card · page fades in (1900ms, the prototype's rhythm)                                                |
+| Cursor idle             | `--dur-idle` 5000ms                                                | Gauntlet still this long → flexing fingers until it moves                                                                  |
+| Banner, tips            | `--dur-banner` 2000ms, `--dur-tip` 3500ms                          | JS timers read tokens via `durationMs()` (`src/lib/tokens.ts`), never `parseFloat` (the minifier turns `300ms` into `.3s`) |
 
 - Ambient motion (fog drift, flicker, embers) is slow and continuous. UI motion is quick and purposeful.
 - `prefers-reduced-motion`: the tokens already shrink durations. Also replace the warp with a 150ms cross-fade, stop camera drift and particles, and use `Bonfire2D` instead of the 3D scene.

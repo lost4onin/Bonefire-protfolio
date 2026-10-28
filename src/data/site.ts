@@ -87,3 +87,33 @@ export const bonfires: Bonfire[] = [
 ];
 
 export const recruiterRoute = { href: '/cv', label: 'Skip the journey' } as const;
+
+/** Landing intro (M2). Plays once per visitor, then the Travel menu. */
+export const intro = {
+  line: 'A lone flame burns at the edge of the ruins. Rest here, traveller, and learn of the one who keeps it.',
+  action: 'Rest at the flame',
+  rekindled: 'Flame Rekindled', // original wording, see DESIGN.md → Voice
+} as const;
+
+/**
+ * Pages that are not bonfires still get a title card when you warp to them.
+ * `name` is the in-world title, `section` the plain label shown under it.
+ */
+export const otherPlaces: { href: string; name: string; section: string }[] = [
+  { href: '/cv', name: 'The Plain Record', section: 'CV' },
+  { href: '/credits', name: 'Roll of Makers', section: 'Credits' },
+  { href: '/lab', name: 'The Workshop', section: 'Style guide' },
+];
+export const lostPlace = { name: 'Lost in the Fog', section: 'Not found' } as const;
+
+/** Title card for a path: exact match, else the deepest bonfire it lives under (/works/lumio → Hall of Works). */
+export function placeFor(pathname: string): { name: string; section: string } {
+  const path = pathname.replace(/\/+$/, '') || '/';
+  const places = [...bonfires, ...otherPlaces];
+  const exact = places.find((p) => p.href === path);
+  if (exact) return exact;
+  const parent = places
+    .filter((p) => p.href !== '/' && path.startsWith(p.href + '/'))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  return parent ?? lostPlace;
+}

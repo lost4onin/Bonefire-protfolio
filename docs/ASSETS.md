@@ -37,7 +37,7 @@ public/              served as-is
 
 1. Put it in `assets-src/models/` (`.glb` preferred).
    - `.fbx` / `.obj` / `.blend`: open in **Blender**, then File → Export → glTF 2.0, Format _glTF Binary (.glb)_, Include _Selected Objects_, Transform _+Y Up_, Geometry _Apply Modifiers_, Materials _Export_. Save the `.glb` next to the source.
-2. `npm run models` (or `npm run models -- <name>` for one file). Output goes to `public/models/<name>.glb` with a size and triangle report. Options: `--name <out>` (output file name, one source only), `--texture-size <px>` (default 2048). Spec/gloss materials (old Sketchfab exports) are converted to metal/rough automatically, since three.js no longer reads them.
+2. `npm run models` (or `npm run models -- <name>` for one file). Output goes to `public/models/<name>.glb` with a size and triangle report. Options: `--name <out>` (output file name, one source only), `--texture-size <px>` (default 2048), `--drop-material <name>` (remove every part using that material; repeatable). Spec/gloss materials (old Sketchfab exports) are converted to metal/rough automatically, since three.js no longer reads them.
 3. Over budget? Decimate in Blender (Modifier → Decimate, ratio 0.3–0.6), bake details into a normal map, or lower `--texture-size` in `scripts/optimize-models.mjs`.
 4. Load it in Three.js with meshopt:
    ```ts
@@ -59,16 +59,16 @@ Two routes, pick per asset:
 
 Not delivered yet. Build placeholders that these can replace without rework.
 
-| Model               | Used on                  | Delivery route                                                                                                                                                                                                                   |
-| ------------------- | ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Gauntlet (cursor)   | Every page, desktop only | **Trial:** live GLB through `npm run models` (rigged or one mesh per pose for idle, point, press, grab, …), kept small (proposal: ≤ 300 KB, ≤ 10k triangles). **Fallback** if slow: pre-render each pose to sprite frames (WebP) |
-| Bonfire scene props | `/` (M3)                 | **Delivered 2026-10-28**: `public/models/bonfire.glb` (see below). Flames and sparks are added in code                                                                                                                           |
-| Relics (items)      | `/works` (M5)            | GLB through `npm run models`, ≤ 600 KB / ≤ 20k triangles each                                                                                                                                                                    |
+| Model               | Used on                  | Delivery route                                                                                         |
+| ------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Gauntlet (cursor)   | Every page, desktop only | **Not needed:** the 2D gauntlet cursor pack is final (`public/images/cursor/`, 2026-10-28)             |
+| Bonfire scene props | `/` (M3)                 | **Delivered 2026-10-28**: `public/models/bonfire.glb` (see below). Flames and sparks are added in code |
+| Relics (items)      | `/works` (M5)            | GLB through `npm run models`, ≤ 600 KB / ≤ 20k triangles each                                          |
 
 ### Landing bonfire (`public/models/bonfire.glb`)
 
-From `assets-src/models/dark_souls_-_bonfire.glb`: `npm run models -- dark_souls_-_bonfire --name bonfire --texture-size 512`.
-1,212 KB, 28,155 triangles, 7 meshes, 7 materials (WebP textures at 512px; 1024px would be 3.1 MB). The optimiser flattens node names, so address parts by **material name**: `steine` stone ring, `asche` ash, `knochen` bones, `schaedel` skull, `klinge` sword blade, `griff` sword hilt, `boden` ground disc (mossy texture, likely to be hidden or recoloured in M3). The coiled sword is kept (Akrem's call, see DECISIONS 2026-10-28). Not used: `bonfire__dark_souls_try2.glb` (602k triangles, sword and baked flames in one mesh), kept as a raw source.
+From `assets-src/models/dark_souls_-_bonfire.glb`: `npm run models -- dark_souls_-_bonfire --name bonfire --texture-size 512 --drop-material boden`.
+1,051 KB, 28,131 triangles, 6 meshes, 6 materials (WebP textures at 512px; 1024px would be 3.1 MB). The optimiser flattens node names, so address parts by **material name**: `steine` stone ring, `asche` ash, `knochen` bones, `schaedel` skull, `klinge` sword blade, `griff` sword hilt. The mossy `boden` ground disc is removed in the pipeline (`--drop-material boden`, Akrem 2026-10-28); M3 supplies its own ground. The coiled sword is kept (Akrem's call, see DECISIONS 2026-10-28). Not used: `bonfire__dark_souls_try2.glb` (602k triangles, sword and baked flames in one mesh), kept as a raw source.
 
 ### Model licence log
 
@@ -89,12 +89,12 @@ Shown to visitors on `/credits` (`src/data/credits.ts`).
 
 ### Image licence log
 
-| File(s)                                  | Source URL                   | Author                      | Licence                                 | Status                                                     |
-| ---------------------------------------- | ---------------------------- | --------------------------- | --------------------------------------- | ---------------------------------------------------------- |
-| `assets-src/bosses/*` (5 renders)        | Dark Souls III (game / wiki) | FromSoftware / Bandai Namco | All rights reserved; used as fan homage | live (4 on boss cards, `lothric` spare); may be replaced   |
-| `assets-src/rings/*` (14 icons)          | Dark Souls III (game / wiki) | FromSoftware / Bandai Namco | All rights reserved; used as fan homage | live (3 on Armoury rings); 11 source-only; may be replaced |
-| `assets-src/cursor/*` (12 files)         | TODO(Akrem): download page   | TODO(Akrem): fan author     | Free to use, per the author's site      | live (`public/images/cursor/`, wired in M2)                |
-| `assets-src/portrait/pilgrim-graded.png` | Akrem's own photo            | Akrem Medimagh              | own work                                | live                                                       |
+| File(s)                                  | Source URL                     | Author                      | Licence                                 | Status                                                     |
+| ---------------------------------------- | ------------------------------ | --------------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| `assets-src/bosses/*` (5 renders)        | Dark Souls III (game / wiki)   | FromSoftware / Bandai Namco | All rights reserved; used as fan homage | live (4 on boss cards, `lothric` spare); may be replaced   |
+| `assets-src/rings/*` (14 icons)          | Dark Souls III (game / wiki)   | FromSoftware / Bandai Namco | All rights reserved; used as fan homage | live (3 on Armoury rings); 11 source-only; may be replaced |
+| `assets-src/cursor/*` (12 files)         | Fan cursor site (not recorded) | Fan-made                    | Free to use, per the author's site      | live (`public/images/cursor/`, wired in M2)                |
+| `assets-src/portrait/pilgrim-graded.png` | Akrem's own photo              | Akrem Medimagh              | own work                                | live                                                       |
 
 - OG card: `public/og-image.jpg`, 1200×630 (M11).
 

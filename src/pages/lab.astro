@@ -10,6 +10,11 @@ import TextBox from '@/components/ui/TextBox.astro';
 import RuneButton from '@/components/ui/RuneButton.astro';
 import KeyPrompt from '@/components/ui/KeyPrompt.astro';
 import Frame from '@/components/ui/Frame.astro';
+import TravelMenu from '@/components/ui/TravelMenu.astro';
+import TitleCard from '@/components/ui/TitleCard.astro';
+import Loader from '@/components/world/Loader.astro';
+import { cursors } from '@/data/cursor';
+import { bonfires } from '@/data/site';
 
 if (import.meta.env.PROD) return Astro.redirect('/');
 
@@ -94,8 +99,83 @@ const colors = [
         <Bonfire2D size={240} />
       </div>
     </section>
+
+    <section>
+      <h2 class="label">Loader (forced visible)</h2>
+      <Loader preview />
+      <div class="row tight">
+        <RuneButton variant="ghost" data-test-loader>Run the real loader for 3s</RuneButton>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Travel menu (inline · modal)</h2>
+      <div class="row">
+        <TravelMenu variant="inline" current="/lab" />
+        <div class="col">
+          <RuneButton data-travel-open aria-haspopup="dialog">Open the dialog</RuneButton>
+          <KeyPrompt keys={['M']} label="Toggle from any page" />
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Title card (shown by every warp)</h2>
+      <div class="titlecard-stage">
+        <TitleCard name={bonfires[2]!.name} section={bonfires[2]!.section} />
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Cursor states (hover the zones)</h2>
+      <div class="row tight">
+        {
+          ['default', 'pointer', 'grab', 'grabbing', 'wait'].map((n) => {
+            const c = cursors.find((x) => x.name === n)!;
+            return (
+              <figure class="cur">
+                <img src={c.src2x} width="64" height="64" alt="" />
+                <figcaption>
+                  <code>{n}</code> <span class="num">hotspot {c.hotspot.join(', ')}</span>
+                </figcaption>
+              </figure>
+            );
+          })
+        }
+      </div>
+      <div class="row tight">
+        <span class="zone">idle</span>
+        <a class="zone" href="#cursor-states">point (a link)</a>
+        <span class="zone" data-cursor="grab">grabbable (data-cursor="grab"), hold to grab</span>
+        <input class="zone" type="text" placeholder="text: native I-beam" aria-label="Text field" />
+      </div>
+    </section>
   </div>
 </WorldLayout>
+
+<script>
+  function init() {
+    const btn = document.querySelector<HTMLButtonElement>('[data-test-loader]');
+    if (!btn || btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => {
+      const loader = window.__loader;
+      if (!loader) return;
+      loader.expect();
+      let p = 0;
+      const t = setInterval(() => {
+        p += 0.1;
+        loader.progress(p);
+        if (p >= 1) {
+          clearInterval(t);
+          loader.done();
+        }
+      }, 300);
+    });
+  }
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
 
 <style>
   .lab {
@@ -179,5 +259,26 @@ const colors = [
   }
   .stats dd {
     margin: 0;
+  }
+  .titlecard-stage {
+    display: grid;
+    place-items: center;
+    min-height: 200px;
+    background: var(--c-void);
+    border: var(--stroke) solid var(--c-line);
+  }
+  .cur img {
+    background: var(--c-ash);
+  }
+  .zone {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target);
+    padding: var(--sp-2) var(--sp-4);
+    border: var(--stroke) dashed var(--c-line-strong);
+    font: inherit;
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+    background: transparent;
   }
 </style>

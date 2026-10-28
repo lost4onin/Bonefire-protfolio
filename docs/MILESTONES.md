@@ -39,19 +39,19 @@ The starter was written **without npm access**, so nothing has been installed or
 
 > **From M2 on:** the UI is a placeholder, the cursor becomes a gauntlet, and the CV and in-world names will change. Read CLAUDE.md → "Things in flux" before starting each milestone.
 
-## M2 — Loading screen, intro, travel menu, warp 🧱🎨 (Days 4–5)
+## ✅ M2 — Loading screen, intro, travel menu, warp 🧱🎨 (Days 4–5)
 
 Spec: PLAN.md §2, §5 · DESIGN.md → Motion, Text box · prototype: `docs/references/prototype-landing.dc.html`
 
-- [ ] **Loader** (`components/world/Loader.astro`): inline HTML/CSS, no deps. `Bonfire2D size≈72` **bottom-left**, thin ember progress line, rotating tips from `src/data/tips.ts` (every ~3.5s, fade). Shown only if loading > 400ms; hard timeout 6s → continue with fallback; `Space`/click skips. Exposes `window.__loader.progress(0..1)` / `.done()` for the 3D scene to drive (M3)
-- [ ] **Intro flow** on `/`: text box "A lone flame burns…" + `Rest at the flame` → "Flame Rekindled" banner (≈2s, original wording) → Travel menu. Plays **once per visitor** (`localStorage` key `ff.introSeen`); returning visitors land on the Travel menu directly
-- [ ] **Travel menu** component (`components/ui/TravelMenu.astro`): lists `bonfires` from `site.ts` with lore name + plain label + one-line lore; keyboard: ↑/↓ to move, Enter to go, `M` toggles it from any page, `ESC` closes. Proper `role="dialog"`, focus trap, focus returns to the trigger
-- [ ] **Warp transition**: on travel, fade to black (`--dur-fade`) → location title card with the destination's `name` (`--dur-title`) → new page fades in. Built with Astro View Transitions (custom animation) + GSAP if needed. **Total ≤ 1.2s**. Reduced motion → simple 150ms cross-fade, no title card
-- [ ] `WorldLayout` header gets a small "Travel" button (touch users have no `M` key)
-- [ ] Cursor as a **state machine** (`data-state`: `idle` / `point` over interactive elements / `press` on click / `grab` while dragging or holding), still drawn with the placeholder sword art so the gauntlet art can swap in later
-- [ ] 📄🎨 **Gauntlet cursor** (can land after M2, once Akrem's model exists): **trial as a live 3D cursor** (desktop fine pointer only, lazy, persisted, paused when hidden; 2D cursor for touch / reduced motion / no WebGL), set the hotspot, map states to poses. Measure desktop Lighthouse on a 2D page and `/` plus frame rate; if it's slow, downgrade to pre-rendered sprites (CLAUDE.md → Things in flux)
-- [ ] `/lab` specimens: Loader (forced visible), TravelMenu, title card
-- [ ] Mobile: everything usable at 360px wide; Travel menu becomes a bottom sheet
+- [x] **Loader** (`components/world/Loader.astro`): inline HTML/CSS, no deps. `Bonfire2D size≈72` **bottom-left**, thin ember progress line, rotating tips from `src/data/tips.ts` (every ~3.5s, fade). Shown only when a page registers work (`__loader.expect()`) and it takes > 400ms, so pages with nothing to wait for skip it; hard timeout 6s → continue with fallback; `Space`/click skips. Exposes `window.__loader.progress(0..1)` / `.done()` for the 3D scene to drive (M3)
+- [x] **Intro flow** on `/`: text box "A lone flame burns…" + `Rest at the flame` → "Flame Rekindled" banner (≈2s, original wording) → Travel menu. Plays **once per visitor** (`localStorage` key `ff.introSeen`); returning visitors land on the Travel menu directly
+- [x] **Travel menu** component (`components/ui/TravelMenu.astro`): lists `bonfires` from `site.ts` with lore name + plain label + one-line lore; keyboard: ↑/↓ to move, Enter to go, `M` toggles it from any page, `ESC` closes. Proper `role="dialog"`, focus trap, focus returns to the trigger
+- [x] **Warp transition** (every internal page change, per Akrem): on travel, fade to black (`--dur-fade`) → location title card with the destination's `name` (`--dur-title`) → new page fades in. Built with Astro View Transitions (custom animation) + GSAP if needed. **Total ≤ 2s** (lengthened from 1.2s by Akrem on 2026-10-28; ~1.9s). Reduced motion → simple 150ms cross-fade, no title card
+- [x] `WorldLayout` header gets a small "Travel" button (touch users have no `M` key)
+- [x] Cursor as a **state machine** (`data-state`: `idle` / `point` over interactive elements / `press` on click / `grab` while dragging or holding), drawn with Akrem's gauntlet pack (+ `grabbable`, `wait` during warps, `text` over fields)
+- [x] ~~📄🎨 **Gauntlet cursor** (can land after M2, once Akrem's model exists): **trial as a live 3D cursor** (desktop fine pointer only, lazy, persisted, paused when hidden; 2D cursor for touch / reduced motion / no WebGL), set the hotspot, map states to poses. Measure desktop Lighthouse on a 2D page and `/` plus frame rate; if it's slow, downgrade to pre-rendered sprites (CLAUDE.md → Things in flux)~~ **Superseded 2026-10-28:** Akrem's 2D gauntlet cursor pack is final (`components/world/Cursor.astro`, art in `public/images/cursor/`); no 3D cursor.
+- [x] `/lab` specimens: Loader (forced visible), TravelMenu, title card
+- [x] Mobile: everything usable at 360px wide; Travel menu becomes a bottom sheet
 
 ## M3 — 3D bonfire landing 🧱🎨 (Days 4–5, overlaps M2)
 

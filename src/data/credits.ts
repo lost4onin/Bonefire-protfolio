@@ -36,8 +36,7 @@ export const credits: Credit[] = [
   {
     what: 'Gauntlet cursor set',
     title: 'Fan-made gauntlet cursor pack',
-    author: 'TODO(Akrem): author name',
-    source: undefined, // TODO(Akrem): download page URL
+    author: 'a fan artist',
     licence: 'Free to use, as stated by the author',
   },
 ];

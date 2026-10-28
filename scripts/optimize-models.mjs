@@ -6,6 +6,7 @@
  *   npm run models -- lumio     only files whose name contains "lumio"
  *   npm run models -- dark_souls_-_bonfire --name bonfire --texture-size 512
  *                               write public/models/bonfire.glb, textures capped at 512px
+ *   … --drop-material boden     remove every primitive using that material (repeatable)
  *   npm run models:inspect      report on what is already in public/models (no writes)
  *
  * What it does (gltf-transform "optimize"):
@@ -20,7 +21,15 @@
  * (File → Export → glTF 2.0, format "glTF Binary", +Y up, apply modifiers). See docs/ASSETS.md.
  */
 import { execFileSync } from 'node:child_process';
-import { readdirSync, readFileSync, statSync, mkdirSync, existsSync, rmSync } from 'node:fs';
+import {
+  readdirSync,
+  readFileSync,
+  writeFileSync,
+  statSync,
+  mkdirSync,
+  existsSync,
+  rmSync,
+} from 'node:fs';
 import { join, basename, extname, relative } from 'node:path';
 import { tmpdir } from 'node:os';
 
@@ -39,12 +48,9 @@ const flag = (name) => {
 const inspectOnly = args.includes('--inspect-only');
 const outName = flag('--name');
 const textureSize = flag('--texture-size') ?? '2048';
-const filter = args.find(
-  (a, i) =>
-    !a.startsWith('--') &&
-    !args[i - 1]?.startsWith('--name') &&
-    !args[i - 1]?.startsWith('--texture-size'),
-);
+const dropMaterials = args.flatMap((a, i) => (a === '--drop-material' ? [args[i + 1]] : []));
+const VALUE_FLAGS = ['--name', '--texture-size', '--drop-material'];
+const filter = args.find((a, i) => !a.startsWith('--') && !VALUE_FLAGS.includes(args[i - 1]));
 
 // Run the CLI's JS entry with node directly: spawning the .cmd shim on Windows fails with
 // EINVAL since Node 20.12 (CVE-2024-27980) unless a shell is used.
@@ -74,6 +80,48 @@ function extensionsUsed(file) {
   return (
     JSON.parse(buf.subarray(20, 20 + buf.readUInt32LE(12)).toString('utf8')).extensionsUsed ?? []
   );
+}
+
+/**
+ * Copy a GLB without the primitives that use any of `names` (material names). Edits only the JSON
+ * chunk; `optimize` then prunes the orphaned accessors, materials and textures.
+ */
+function withoutMaterials(src, names, out) {
+  const buf = readFileSync(src);
+  const jsonLen = buf.readUInt32LE(12);
+  const json = JSON.parse(buf.subarray(20, 20 + jsonLen).toString('utf8'));
+  const drop = new Set(
+    (json.materials ?? []).flatMap((m, i) => (names.includes(m.name) ? [i] : [])),
+  );
+  const missing = names.filter((n) => !(json.materials ?? []).some((m) => m.name === n));
+  if (missing.length) throw new Error(`No material named ${missing.join(', ')} in ${src}`);
+  const emptied = new Set();
+  json.meshes.forEach((mesh, i) => {
+    mesh.primitives = mesh.primitives.filter((p) => !drop.has(p.material));
+    if (!mesh.primitives.length) emptied.add(i);
+  });
+  // A mesh with no primitives is invalid glTF: remove it and renumber node → mesh references.
+  const newIndex = [];
+  json.meshes = json.meshes.filter((_, i) => {
+    newIndex[i] = emptied.has(i) ? undefined : i - [...emptied].filter((e) => e < i).length;
+    return !emptied.has(i);
+  });
+  json.nodes.forEach((n) => {
+    if (n.mesh === undefined) return;
+    if (newIndex[n.mesh] === undefined) delete n.mesh;
+    else n.mesh = newIndex[n.mesh];
+  });
+  let text = JSON.stringify(json);
+  text += ' '.repeat((4 - (Buffer.byteLength(text) % 4)) % 4);
+  const jsonChunk = Buffer.from(text);
+  const rest = buf.subarray(20 + jsonLen); // BIN chunk, untouched
+  const header = Buffer.alloc(20);
+  header.writeUInt32LE(0x46546c67, 0);
+  header.writeUInt32LE(2, 4);
+  header.writeUInt32LE(20 + jsonChunk.length + rest.length, 8);
+  header.writeUInt32LE(jsonChunk.length, 12);
+  header.writeUInt32LE(0x4e4f534a, 16); // 'JSON'
+  writeFileSync(out, Buffer.concat([header, jsonChunk, rest]));
 }
 
 /**
@@ -156,11 +204,19 @@ for (const src of sources) {
     (outName ?? basename(src, extname(src))).toLowerCase().replace(/[^a-z0-9-]+/g, '-') + '.glb',
   );
   console.log(`→ ${src}`);
+  const temps = [];
   let input = src;
+  if (dropMaterials.length) {
+    const next = join(tmpdir(), `dropped-${basename(src)}`);
+    console.log(`   dropping material(s): ${dropMaterials.join(', ')}`);
+    withoutMaterials(input, dropMaterials, next);
+    temps.push((input = next));
+  }
   if (extensionsUsed(src).includes('KHR_materials_pbrSpecularGlossiness')) {
-    input = join(tmpdir(), `metalrough-${basename(src)}`);
+    const next = join(tmpdir(), `metalrough-${basename(src)}`);
     console.log('   spec/gloss materials → metal/rough');
-    run(['metalrough', src, input]);
+    run(['metalrough', input, next]);
+    temps.push((input = next));
   }
   run([
     'optimize',
@@ -173,7 +229,7 @@ for (const src of sources) {
     '--texture-size',
     textureSize,
   ]);
-  if (input !== src) rmSync(input);
+  temps.forEach((t) => rmSync(t));
   over = report(out) || over;
 }
 console.log(

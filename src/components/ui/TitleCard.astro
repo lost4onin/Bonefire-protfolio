@@ -1,0 +1,49 @@
+---
+/**
+ * Location title card: the in-world name, a hairline, and the plain label under it.
+ * Shown by the warp (components/world/Warp.astro) on every page change; static specimen in /lab.
+ */
+interface Props {
+  name?: string;
+  section?: string;
+  class?: string;
+}
+const { name = '', section = '', class: className } = Astro.props;
+---
+
+<div class:list={['titlecard', className]}>
+  <p class="tc-name" data-tc-name>{name}</p>
+  <span class="tc-rule" aria-hidden="true"></span>
+  <p class="tc-section" data-tc-section>{section}</p>
+</div>
+
+<style>
+  .titlecard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--sp-3);
+    padding: 0 var(--gutter);
+    text-align: center;
+  }
+  .tc-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(var(--fs-24), 5vw, var(--fs-40));
+    letter-spacing: var(--tracking-label);
+    text-transform: uppercase;
+    color: var(--c-bone);
+    text-shadow: 0 0 18px var(--c-ember-glow);
+  }
+  .tc-rule {
+    width: min(40vw, 240px);
+    height: var(--stroke);
+    background: linear-gradient(90deg, transparent, var(--c-ember), transparent);
+  }
+  .tc-section {
+    margin: 0;
+    font-size: var(--fs-18);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+</style>
