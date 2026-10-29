@@ -377,9 +377,10 @@ const sealRim = Array.from({ length: 40 }, (_, i) => {
     background: var(--c-ember);
     box-shadow: 0 0 6px 1px var(--c-ember-deep);
     opacity: 0;
-    animation: rise var(--d) linear var(--delay) infinite;
+    animation: ember-rise var(--d) linear var(--delay) infinite;
   }
-  @keyframes rise {
+  /* not `rise`: keyframe names are global, and TravelMenu's dialog uses that one */
+  @keyframes ember-rise {
     0% {
       opacity: 0;
       transform: translate(0, 0) scale(1);

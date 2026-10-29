@@ -2,6 +2,9 @@
 /**
  * Fog + film grain + vignette. The shared atmosphere behind every world page.
  * Pure CSS, no JS. Sits at --z-world, pointer-events: none.
+ * The Nexus look (Akrem, 2026-10-29): a pale cold haze, and cold blue-black shadow pooling along
+ * the top and bottom edges and in the corners. The header and footer float in that shadow (no
+ * solid bars), so it is never cut. The middle stays clear: a fire keeps its warmth.
  * `density` lets a page thin or thicken the fog (the 3D landing uses Three.js fog instead → "light").
  */
 interface Props {
@@ -38,7 +41,7 @@ const { density = 'normal' } = Astro.props;
     bottom: 4%;
     width: 75%;
     height: 32vh;
-    background: rgb(120 112 104 / 0.1);
+    background: color-mix(in srgb, var(--c-haze) 9%, transparent);
     animation: drift 28s var(--ease-in-out) infinite alternate;
   }
   .fog-b {
@@ -46,7 +49,7 @@ const { density = 'normal' } = Astro.props;
     bottom: -4%;
     width: 80%;
     height: 38vh;
-    background: rgb(90 84 78 / 0.12);
+    background: color-mix(in srgb, var(--c-haze) 10%, transparent);
     animation: drift 36s var(--ease-in-out) infinite alternate-reverse;
   }
   .fog-c {
@@ -54,7 +57,7 @@ const { density = 'normal' } = Astro.props;
     top: 10%;
     width: 60%;
     height: 24vh;
-    background: rgb(90 84 78 / 0.05);
+    background: color-mix(in srgb, var(--c-haze) 5%, transparent);
     animation: drift 44s var(--ease-in-out) infinite alternate;
   }
   .density-light .fog {
@@ -64,10 +67,31 @@ const { density = 'normal' } = Astro.props;
     opacity: 1.6;
   }
 
+  /* bands along the top and bottom edges + deepest in the corners; many stops so it never bands */
   .vignette {
     position: absolute;
     inset: 0;
-    background: radial-gradient(ellipse at 50% 55%, transparent 40%, rgb(0 0 0 / 0.75) 100%);
+    background:
+      linear-gradient(
+        to bottom,
+        color-mix(in srgb, var(--c-shade) 90%, transparent),
+        color-mix(in srgb, var(--c-shade) 62%, transparent) 6%,
+        color-mix(in srgb, var(--c-shade) 30%, transparent) 14%,
+        color-mix(in srgb, var(--c-shade) 10%, transparent) 22%,
+        transparent 32%,
+        transparent 64%,
+        color-mix(in srgb, var(--c-shade) 12%, transparent) 76%,
+        color-mix(in srgb, var(--c-shade) 38%, transparent) 86%,
+        color-mix(in srgb, var(--c-shade) 70%, transparent) 94%,
+        color-mix(in srgb, var(--c-shade) 92%, transparent)
+      ),
+      radial-gradient(
+        ellipse 78% 72% at 50% 50%,
+        transparent 38%,
+        color-mix(in srgb, var(--c-shade) 28%, transparent) 62%,
+        color-mix(in srgb, var(--c-shade) 66%, transparent) 84%,
+        color-mix(in srgb, var(--c-shade) 92%, transparent)
+      );
   }
 
   /* SVG turbulence grain, stepped animation so it flickers like film */

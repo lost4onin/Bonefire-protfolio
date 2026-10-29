@@ -10,6 +10,7 @@ assets-src/          raw sources, never served, committed (big binaries via Git 
   audio/             raw recordings / downloads before trimming
 public/              served as-is
   images/            pilgrim-portrait.webp, relics/, bosses/, armoury/rings/, cursor/  (output of `npm run images`)
+                     bonfire-still.webp  (output of `npm run still`)
   models/            OPTIMISED .glb only (output of `npm run models`)
   audio/sfx/         short .ogg/.mp3 effects
   audio/music/       playlist tracks
@@ -82,6 +83,7 @@ Shown to visitors on `/credits` (`src/data/credits.ts`).
 ## Images
 
 - Portrait: `scripts/portrait_grade.py` (instructions in the file header). Web version `public/images/pilgrim-portrait.webp` (≈70 KB, 910×1400, transparent).
+- Landing still: `public/images/bonfire-still.webp` (≈15 KB, 1056×945) is one frame of the live 3D scene, shown in the hearth while the 3D loads, for good without 3D, and small on the loading screen. **`npm run still`** (`scripts/capture-still.mjs`, needs `npm run dev` or `preview` running) renders `/?quality=high` in the installed Chrome over the DevTools protocol, hides everything but the canvas, crops the `[data-still]` box from `index.astro` and encodes WebP with sharp. Re-run after any change to the landing scene (model, fire, ruins, palette) and copy the printed size into `bonfireStill` in `src/data/site.ts`. It shows the CC BY bonfire model, already credited on `/credits`.
 - Relic and boss art: `.webp`, ≤ 1600px wide, ≤ 200 KB each. Use Astro `<Image />` for anything not already optimised.
 - **`npm run images`** (`scripts/optimize-images.mjs`, sharp): processes the `JOBS` manifest at the top of the script. Presets `boss` (≤ 1200px wide, ≤ 200 KB WebP), `ring` (256×256 WebP + @2x when the source is big enough), `cursor` (reads `.cur`/`.ani`, trims, 32×32 + @2x PNG, writes hotspots to `src/data/cursor.ts`). Never upscales, strips metadata, skips existing outputs unless `--force`. Filter: `npm run images -- rings`.
 - Boss art is named after what it shows (`yhorm.webp`), not the hackathon; the mapping lives in each `src/content/bosses/*.md` `image:` field. Current: GAICA → `abyss-watchers`, KILANI → `yhorm`, Sight Day → `dancer`, leanX → `vordt`; `lothric` spare. Several sources are small (Vordt 300px, Lothric 240px, Dancer 512px), so expect soft cards until better art arrives.

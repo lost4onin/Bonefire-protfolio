@@ -2,10 +2,11 @@
 /**
  * WorldLayout — every in-game page (/, /about, /works, /victories, /armoury, /contact, /404).
  * Provides: atmosphere (fog/grain/vignette), cursor, header (identity + Travel + Skip the journey),
- * footer (seeking status + email + CV + credits), key-prompt bar, main landmark, Travel dialog (`M`),
+ * footer (seeking status + key prompts + email + CV + credits), main landmark, Travel dialog (`M`),
  * loading screen (only shown when a page calls window.__loader.expect()).
  *
- * Recruiter rule: name, role, email, CV and "Skip the journey" are visible on EVERY world page.
+ * Recruiter rule: name, role and "Skip the journey" (→ /cv) head EVERY world page; email and CV
+ * close it in the footer, at the very end of the page (Akrem, 2026-10-29).
  *
  * Slots:
  *  - default     → page content (inside <main>)
@@ -91,9 +92,9 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
     inset: 0;
     z-index: var(--z-world);
   }
-  /* header · main · footer, all in the flow. Header and footer are solid bars pinned (sticky) to the
-     top and bottom of the screen, so content never shows through or ends up behind them.
-     Phones: only the footer stays pinned (email + CV); the header scrolls away to save space. */
+  /* header · main · footer, all in the flow, and see-through: they float in Fog's edge shadow, so
+     no bar ever cuts the scene. The header is pinned (sticky) on desktop and scrolls away on phones.
+     The footer is never pinned: it closes the page and rises into place as you reach the end. */
   .world {
     display: flex;
     flex-direction: column;
@@ -108,9 +109,8 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
     padding: var(--sp-6) var(--gutter) var(--sp-7);
   }
   .chrome {
-    position: sticky;
+    position: relative;
     z-index: var(--z-chrome);
-    background: var(--c-void);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -127,14 +127,63 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
     opacity: 1;
   }
   .top {
+    position: sticky;
     top: 0;
-    border-bottom: var(--stroke) solid var(--c-line);
+  }
+  /* frosted scrim so text scrolling under the header stays out of its way. It fades in over the
+     first scroll step and fades out at its lower edge, so it never draws a line of its own */
+  .top::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: color-mix(in srgb, var(--c-shade) 55%, transparent);
+    -webkit-backdrop-filter: blur(var(--blur-scrim));
+    backdrop-filter: blur(var(--blur-scrim));
+    -webkit-mask-image: linear-gradient(var(--c-void) 55%, transparent);
+    mask-image: linear-gradient(var(--c-void) 55%, transparent);
+    pointer-events: none;
+  }
+  /* where scroll timelines exist the scrim is off until the page scrolls (and on pages that can't),
+     so nothing is blurred for nothing, e.g. over the 3D landing */
+  @supports (animation-timeline: scroll()) {
+    .top::before {
+      opacity: 0;
+      animation: scrim-in linear both;
+      animation-timeline: scroll(root);
+      animation-range: 0 var(--sp-6);
+    }
   }
   .bottom {
-    bottom: 0;
-    border-top: var(--stroke) solid var(--c-line);
     font-size: var(--fs-16);
     color: var(--c-text-dim);
+  }
+  /* an engraved hairline that fades out at both ends instead of a bar edge across the screen */
+  .bottom::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: var(--gutter);
+    right: var(--gutter);
+    height: var(--stroke);
+    background: var(--c-line-strong);
+    -webkit-mask-image: linear-gradient(90deg, transparent, var(--c-void) 30% 70%, transparent);
+    mask-image: linear-gradient(90deg, transparent, var(--c-void) 30% 70%, transparent);
+  }
+  /* rises into place: while the footer scrolls into view its contents trail below, catch up and
+     stop exactly at the end of the page. Clipped, so it never lengthens the page */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .bottom {
+        overflow: clip;
+        view-timeline: --footer block;
+      }
+      .bottom > * {
+        animation: footer-rise linear both;
+        animation-timeline: --footer;
+        animation-range: entry 0% entry 100%;
+      }
+    }
   }
   .id {
     display: flex;
@@ -228,12 +277,27 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
       opacity: 1;
     }
   }
+  /* keyframe names are global across the site's CSS: keep them unique */
+  @keyframes scrim-in {
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes footer-rise {
+    from {
+      opacity: 0;
+      transform: translateY(var(--sp-8));
+    }
+  }
   @media (max-width: 720px) {
     .prompts {
       display: none;
     }
     .top {
       position: relative;
+    }
+    .top::before {
+      display: none;
     }
     .top,
     .bottom {

@@ -1,10 +1,10 @@
 /**
  * The landing's 3D bonfire. One renderer, one dynamic light (the fire), FogExp2 in palette colours.
- * Framing: the camera is placed so the fire fills the page's hearth element (the box where the 2D
- * bonfire sits) and a view offset pins it to that element's position, even while the page scrolls.
- * Motion: slow camera breathing + pointer parallax (desktop only); the fire stays pinned.
+ * Framing: the camera is placed so the fire fills the page's hearth element (the box where the
+ * still of this fire sits) and a view offset pins it to that element's position, even while the
+ * page scrolls. Motion: slow camera breathing + pointer parallax (desktop only); the fire stays pinned.
  * Quality: starts at the tier from sceneQuality.ts, FPS-probes the first ~2s and steps down
- * (high → low → onFallback = back to Bonfire2D). Pauses when the tab is hidden.
+ * (high → low → onFallback = back to the still). Pauses when the tab is hidden.
  * Lifecycle: dispose() frees every GPU resource; Scene3D calls it on astro:before-swap.
  * Main thread: heavy GPU work is spread out (async shader compile, one texture upload per idle
  * slice, shadow map rendered once) so Lighthouse's Total Blocking Time stays low.
@@ -56,7 +56,7 @@ export function paletteFromTokens(): Palette {
 
 export interface SceneEvents {
   onProgress(fraction: number): void;
-  /** the device can't hold even the low tier: show the 2D bonfire instead */
+  /** the device can't hold even the low tier: show the still instead */
   onFallback(): void;
   /** the FPS probe stepped the scene down a tier */
   onTier?(tier: Tier): void;

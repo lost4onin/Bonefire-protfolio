@@ -9,7 +9,7 @@ export default defineConfig({
   output: 'static',
   trailingSlash: 'never',
   build: {
-    format: 'file', // /about instead of /about/
+    format: 'file', // /about instead of /about/ (vercel.json cleanUrls serves about.html there)
   },
   prefetch: {
     prefetchAll: true,

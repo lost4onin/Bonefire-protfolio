@@ -11,4 +11,5 @@ Integrate the 3D model **$ARGUMENTS**.
 4. Ask me for the source and licence if I haven't given them, and add the row to the model licence log in `docs/ASSETS.md`.
 5. Wire it into the right scene (default: the landing in `src/components/three/`) with `GLTFLoader` + `MeshoptDecoder` through the shared `LoadingManager`, so the loader shows real progress. Match the scene's materials and lighting: dark, rough, lit only by the fire.
 6. Dispose of it properly on page swap. Keep a procedural fallback if the file fails to load.
-7. Tell me what to look at in `npm run dev`.
+7. If it changed the landing scene, run `npm run still` (with `npm run dev` running) so the still in the hearth matches the 3D again, and copy the printed size into `bonfireStill` in `src/data/site.ts`.
+8. Tell me what to look at in `npm run dev`.

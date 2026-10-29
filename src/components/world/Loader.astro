@@ -1,6 +1,7 @@
 ---
 /**
- * Loading screen: small bonfire bottom-left, a thin ember progress line, rotating true-fact tips.
+ * Loading screen: small bonfire bottom-left (the still of the 3D fire, lazy: only fetched once the
+ * screen shows, and the landing already has it cached), a thin ember progress line, rotating tips.
  * Inline HTML/CSS, hidden by default (no JS → never shown, never stuck).
  *
  * It only appears when a page has something to wait for: a script calls `window.__loader.expect()`
@@ -10,9 +11,9 @@
  * and `ff:loader-ready` once window.__loader exists (scripts that run earlier can wait for it).
  * Lives in WorldLayout. `preview` renders a static, always-visible copy for /lab.
  */
-import Bonfire2D from './Bonfire2D.astro';
 import KeyPrompt from '@/components/ui/KeyPrompt.astro';
 import { loadingTips } from '@/data/tips';
+import { bonfireStill } from '@/data/site';
 
 interface Props {
   preview?: boolean;
@@ -26,7 +27,16 @@ const { preview = false } = Astro.props;
   hidden={!preview}
   data-tips={JSON.stringify(loadingTips)}
 >
-  <div class="fire" aria-hidden="true"><Bonfire2D size={72} sword={false} /></div>
+  <div class="fire" aria-hidden="true">
+    <img
+      src={bonfireStill.src}
+      width={bonfireStill.width}
+      height={bonfireStill.height}
+      alt=""
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
   <div class="body">
     <p class="tip" data-tip>{loadingTips[0]}</p>
     <div
@@ -159,6 +169,12 @@ const { preview = false } = Astro.props;
     z-index: auto;
     min-height: 280px;
     border: var(--stroke) solid var(--c-line);
+  }
+  .fire img {
+    width: 9rem;
+    height: auto;
+    -webkit-mask-image: radial-gradient(50% 46% at 50% 56%, var(--c-void) 60%, transparent);
+    mask-image: radial-gradient(50% 46% at 50% 56%, var(--c-void) 60%, transparent);
   }
   .body {
     display: flex;

@@ -310,6 +310,7 @@ const pct = (v: number) => `${v.toFixed(3)}%`;
   }
 
   .panel {
+    position: relative;
     width: 100%;
     max-width: 30rem;
   }
@@ -410,8 +411,12 @@ const pct = (v: number) => `${v.toFixed(3)}%`;
     transform: translate(-100%, 0);
   }
 
+  /* visually hidden, but a table ignores height and overflow and keeps its full height: pinned to
+     the panel's top, so it can't stick out below the page's end (where the footer must sit) */
   .data {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 1px;
     height: 1px;
     margin: -1px;

@@ -1,5 +1,5 @@
 /**
- * Decides how the landing renders: 'high' / 'low' 3D tiers, or '2d' (the Bonfire2D fallback).
+ * Decides how the landing renders: 'high' / 'low' 3D tiers, or '2d' = no 3D (the still of the fire).
  * NO three.js import here: this runs before the 3D chunk is fetched, so 2D visitors never download it.
  *
  * 2d when: no hardware WebGL (none, or software-rendered: no GPU, blocked driver, VM), reduced
@@ -32,11 +32,11 @@ export const FPS_FLOOR: Record<Tier, number> = { high: 45, low: 24 };
 /**
  * True only for GPU-backed WebGL. `failIfMajorPerformanceCaveat` makes the browser refuse a context
  * it would render in software (SwiftShader, llvmpipe…): there the scene is slow and CPU-hungry, and
- * the 2D bonfire serves the visitor better. Some setups don't flag their software renderer as a
+ * the still serves the visitor better. Some setups don't flag their software renderer as a
  * caveat, so known ones are also caught by name. The probe context is released immediately.
  * It runs in a Worker (OffscreenCanvas) when possible: creating even a 1×1 context can block the
  * main thread for a second while a software renderer starts. Main-thread fallback otherwise.
- * If the real renderer still fails later, Scene3D catches it and keeps the 2D bonfire.
+ * If the real renderer still fails later, Scene3D catches it and keeps the still.
  */
 const SOFTWARE_RENDERER = /swiftshader|llvmpipe|softpipe|software|basic render/i;
 

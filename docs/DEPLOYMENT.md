@@ -10,6 +10,7 @@ Claude Code writes code and proposes commits; it **never** creates, links or rec
 | Hosting          | Vercel, Hobby (free) plan, Git integration                                                                                              |
 | Framework preset | Astro (auto-detected). Build `npm run build`, output `dist`, install `npm install`                                                      |
 | Node             | 22.x (Project Settings → Build and Deployment → Node.js Version)                                                                        |
+| Routing          | `vercel.json`: `cleanUrls` serves `about.html` at `/about` (Astro `build.format: 'file'`), `trailingSlash: false` matches Astro         |
 | Production URL   | https://bonefire-protfolio.vercel.app (also `astro.config.mjs` → `site`)                                                                |
 | Custom domain    | `TODO(Akrem)` at launch (M12)                                                                                                           |
 

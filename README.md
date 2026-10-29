@@ -33,7 +33,7 @@ npm run dev          # → http://localhost:4321
 
 Open these to check the starter:
 
-- `/`: placeholder landing (2D bonfire, intro box, travel list)
+- `/`: landing (3D bonfire with a still of it while it loads, intro box, travel list)
 - `/cv`: the complete recruiter page
 - `/lab`: the style guide: palette, fonts, components, bonfire sizes
 - `/anything`: the "Lost in the Fog" 404

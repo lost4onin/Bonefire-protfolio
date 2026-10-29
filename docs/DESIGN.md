@@ -15,10 +15,12 @@ Live specimens: `npm run dev` → `/lab`.
 | `--c-ember`      | `#E8A866` | **The one accent**: fire, focus ring, active/selected, key headings | 9.9:1 ✅         |
 | `--c-text-faint` | `#7A7369` | Decorative or ≥18px only                                            | 4.35:1 ⚠         |
 | `--c-ember-deep` | `#C4651F` | Fire core, pressed states, decoration only                          | 5.1:1            |
+| `--c-shade`      | `#03050A` | **Atmosphere only**: the Nexus shadow (Fog vignette, header scrim)  | n/a              |
+| `--c-haze`       | `#8E9AAC` | **Atmosphere only**: the pale cold fog, always at ≤ 10%             | n/a              |
 
 Rules:
 
-- **One accent.** Ember is the only colour. No blues, greens or reds in UI (fire art may use its own reds and oranges).
+- **One accent.** Ember is the only colour. No blues, greens or reds in UI (fire art may use its own reds and oranges). The cold `--c-shade` / `--c-haze` are the atmosphere's, never UI or text (Akrem chose Demon's Souls' Nexus look, 2026-10-29).
 - Ember marks _where the player's attention should go_: selected item, focus, primary action, active tab. If everything is ember, nothing is.
 - `--c-ember-wash` (ember at 8%) is the hover / selected-row background (stat rows, radar tabs).
 - Text is bone or muted. Never pure white (`#fff`) or pure grey.
@@ -59,8 +61,8 @@ Rules:
 | `Radar`           | `/about` Affinities                                 | Flat-top hex, astrolabe ring, ember polygon; sets become tabs that morph it; HTML labels; data `<table>`  |
 | `Tabs`            | `/about` Status / Chronicle / Oaths                 | ARIA tablist, ←/→, optional page-wide `Q`/`E`; panels from named slots; all panels show without JS        |
 | `Frame`           | Panels: stats, item descriptions, cards             | Optional title rule, Lies of P style                                                                      |
-| `Bonfire2D`       | Loader (≈72px), fallback (240px)                    | The 3D fire must match its silhouette                                                                     |
-| `Fog`             | Behind every world page                             | `light` / `normal` / `thick`                                                                              |
+| `Bonfire2D`       | `/lab` only (retired from the landing and loader)   | Akrem, 2026-10-29: never show the 2D fire; the landing and loader use the still of the 3D fire            |
+| `Fog`             | Behind every world page                             | `light` / `normal` / `thick`; the Nexus edge shadow the header and footer float in                        |
 | `Cursor`          | Desktop only (`components/world/`)                  | Gauntlet pack; `data-state` idle/point/press/grab/grabbable/wait/text; hotspots from `src/data/cursor.ts` |
 | `TravelMenu`      | Landing (inline) and every world page (dialog, `M`) | Name + plain label + lore line; bottom sheet on phones                                                    |
 | `TitleCard`       | Warp, `/lab`                                        | In-world name, ember hairline, plain label                                                                |
@@ -83,19 +85,24 @@ Planned (see MILESTONES.md): `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, 
 | Cursor idle             | `--dur-idle` 5000ms                                                | Gauntlet still this long → flexing fingers until it moves                                                                  |
 | Radar morph             | `--dur-morph` 520ms                                                | rAF tween with a small overshoot (JS twin of `--ease-ember`); 0 with reduced motion                                        |
 | Firelight flicker       | `--dur-flicker` 5200ms                                             | Ambient glow loop on `/about` (stepped opacity)                                                                            |
+| Footer rise             | Scroll-linked (the footer's own entry into view)                   | Contents trail `--sp-8` below and fade in, settling exactly at the page end. CSS scroll timeline; none with reduced motion |
+| Header scrim            | Scroll-linked (first `--sp-6` of scroll)                           | Frosted (`--blur-scrim`) `--c-shade` scrim fades in once content can pass under the header; off on pages that don't scroll |
+| Landing still → 3D      | `--dur-fade` twice                                                 | The live canvas fades in under the still, then the still fades out (no dip in the light)                                   |
 | Banner, tips            | `--dur-banner` 2000ms, `--dur-tip` 3500ms                          | JS timers read tokens via `durationMs()` (`src/lib/tokens.ts`), never `parseFloat` (the minifier turns `300ms` into `.3s`) |
 
 - Ambient motion (fog drift, flicker, embers) is slow and continuous. UI motion is quick and purposeful.
-- `prefers-reduced-motion`: the tokens already shrink durations. Also replace the warp with a 150ms cross-fade, stop camera drift and particles, and use `Bonfire2D` instead of the 3D scene.
+- `prefers-reduced-motion`: the tokens already shrink durations. Also replace the warp with a 150ms cross-fade, stop camera drift and particles, show the still of the 3D fire instead of the scene, and drop the footer rise.
+- Keyframe names are global across the site's CSS (Astro scopes selectors, not `@keyframes`): give every new one a specific name (`footer-rise`, `ember-rise`), never a bare `rise` / `fade`.
 
 ## 6. Atmosphere recipe (the "vibe")
 
 1. Ground `--c-void`, radial warm falloff around the light source.
 2. 2–3 fog layers drifting at different speeds (CSS here, `FogExp2` in 3D).
 3. Film grain at ~7% opacity, stepped animation.
-4. Vignette to near-black at the edges.
+4. The Nexus shadow (Akrem, 2026-10-29): cold blue-black (`--c-shade`) pooling along the top and bottom edges and deepest in the corners, a pale cold haze (`--c-haze`) in the fog. The middle stays clear, so the one warm light keeps its warmth.
 5. **One** warm light per screen (fire, lantern, a relic's glow). Everything else is silhouette.
 6. Engraved details: hairlines, ember corner marks, small ornaments. Never drop shadows or gradients on UI chrome.
+7. **No solid bars.** Header and footer are see-through and float in the edge shadow, so nothing cuts the scene. The header's only surface is the frosted scrim that appears when content scrolls under it; the footer's top rule is a hairline that fades out at both ends. The footer is never pinned: it closes the page.
 
 ## 7. Iconography and illustration
 

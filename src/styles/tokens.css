@@ -25,6 +25,11 @@
   --c-box-edge: rgb(242 237 228 / 0.14);
   --c-scrim: rgb(0 0 0 / 0.72);
 
+  /* atmosphere only (Fog, the header scrim), never UI or text: the Nexus look (Akrem, 2026-10-29),
+     cold blue-black shadow pooling at the screen edges, a pale cold haze; warmth only near a fire */
+  --c-shade: #03050a;
+  --c-haze: #8e9aac;
+
   /* ── Typography ───────────────────────────────────────── */
   /* IM Fell English SC: titles, labels, key prompts — NEVER below 16px */
   --font-display: 'IM Fell English SC', 'Cormorant SC', Georgia, serif;
@@ -66,6 +71,7 @@
   --radius: 0; /* the world is carved, not rounded */
   --stroke: 1px;
   --target: 44px; /* min touch target */
+  --blur-scrim: 10px; /* frosted header scrim, only once content scrolls under it */
 
   /* ── Motion ───────────────────────────────────────────── */
   --dur-fast: 120ms; /* hover, ticks */

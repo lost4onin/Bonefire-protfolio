@@ -66,6 +66,7 @@ Spec: PLAN.md §1, §8 · ASSETS.md budgets · match the `Bonfire2D` silhouette 
 - [x] Drives the M2 loader via `THREE.LoadingManager` (real progress): byte progress of the download only, so fast/cached visits never see it; the GPU warm-up runs behind the 2D bonfire
 - [x] Lifecycle: pause when tab hidden; `dispose()` geometry/materials/textures/renderer on `astro:before-swap`
 - [x] Budget met: landing JS (excluding three chunk) small; total landing transfer ≤ ~1.5 MB on high tier; Lighthouse Perf ≥ 85. Measured 2026-10-28 (Lighthouse 12, real Intel UHD GPU): `/` desktop 100, mobile 96; no-GPU desktop 100, mobile 97 (2D); A11y/BP/SEO 100. Transfer 1.4 MB (three 157 KB gz + model 1,051 KB)
+- [x] 2026-10-29 (Akrem): the `Bonfire2D` fallback and loader fire are replaced by a still of the 3D scene (`npm run still`); see DECISIONS
 
 ## M4 — The Pilgrim (`/about`) 🧱🎨📄 (Day 6)
 

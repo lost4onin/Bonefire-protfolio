@@ -4,8 +4,9 @@
  * The page ships no three.js: this script decides the mode first (sceneQuality.ts, tiny), and only
  * for 3D does it fetch the three chunk, after first paint + idle time, so text never waits.
  * Drives the loading screen (window.__loader: expect → progress → done).
- * The 2D bonfire inside [data-hearth] stays until the first 3D frame, then cross-fades out
- * (hearth[data-live]); it stays for good on '2d' (no WebGL, reduced motion, Save-Data, weak phone).
+ * The still of this fire inside [data-hearth] covers the wait: on the first 3D frame the canvas fades
+ * in under it, then it fades away (hearth[data-live]). It stays for good on '2d' = no 3D (no WebGL,
+ * reduced motion, Save-Data, weak phone).
  * Disposed on astro:before-swap. Debug: /?quality=high|low|2d.
  */
 ---
@@ -96,7 +97,7 @@
         onProgress: (p) => loader?.progress(p),
         onFallback: fallBack,
         onTier: (tier) => (canvas.dataset.mode = tier),
-        // the loader covers the download only; the warm-up runs behind the 2D bonfire
+        // the loader covers the download only; the warm-up runs behind the still
         onDownloaded: () => {
           loader?.progress(1);
           loader?.done();
@@ -110,7 +111,7 @@
         if (hearth) hearth.dataset.live = '1';
       });
     } catch (err) {
-      console.warn('[scene3d] falling back to the 2D bonfire', err);
+      console.warn('[scene3d] falling back to the still', err);
       fallBack();
       loader?.done();
     }

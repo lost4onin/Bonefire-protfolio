@@ -4,16 +4,16 @@
  * Intro (M2): "A lone flame burns…" → Rest at the flame → "Flame Rekindled" → Travel menu.
  * Plays once per visitor (localStorage `ff.introSeen`); returning visitors get the menu directly.
  * States on #landing[data-intro]: static (no JS: text + menu) · intro · kindled · menu.
- * M3: the 3D bonfire (Scene3D, background) is framed onto [data-hearth]; the 2D bonfire inside it
- * shows until the first 3D frame, and stays as the fallback (no WebGL, reduced motion, Save-Data…).
+ * M3: the 3D bonfire (Scene3D, background) is framed onto [data-hearth]. Inside it, a still of that
+ * same 3D fire (`npm run still`) shows from the first paint until the live scene has faded in, and
+ * stays for good where there is no 3D (no WebGL, reduced motion, Save-Data…). No 2D bonfire here.
  */
 import WorldLayout from '@/layouts/WorldLayout.astro';
-import Bonfire2D from '@/components/world/Bonfire2D.astro';
 import TextBox from '@/components/ui/TextBox.astro';
 import RuneButton from '@/components/ui/RuneButton.astro';
 import TravelMenu from '@/components/ui/TravelMenu.astro';
 import Scene3D from '@/components/three/Scene3D.astro';
-import { intro } from '@/data/site';
+import { intro, bonfireStill } from '@/data/site';
 ---
 
 <WorldLayout fog="light">
@@ -30,7 +30,16 @@ import { intro } from '@/data/site';
     </script>
     <h1 class="sr-only">The First Flame</h1>
     <div class="hearth" data-hearth>
-      <Bonfire2D size={240} />
+      <img
+        class="still"
+        data-still
+        src={bonfireStill.src}
+        width={bonfireStill.width}
+        height={bonfireStill.height}
+        alt={bonfireStill.alt}
+        fetchpriority="high"
+        decoding="async"
+      />
     </div>
 
     <TextBox as="section" width="md" class="intro" aria-label="Welcome">
@@ -80,11 +89,31 @@ import { intro } from '@/data/site';
     gap: var(--sp-6);
     padding-top: var(--sp-6);
   }
-  .hearth > :global(*) {
+  /* the box the 3D camera frames the fire onto (BonfireScene): its size sets the scene's scale */
+  .hearth {
+    position: relative;
+    width: 15rem;
+    aspect-ratio: 8 / 9;
+  }
+  /* a frame of the 3D fire, feathered into the dark. `npm run still` crops exactly this box, so
+     moving or resizing it here (then re-running the script) is all a new crop needs */
+  .still {
+    position: absolute;
+    left: -60%;
+    top: -50%;
+    width: 220%;
+    height: 175%;
+    max-width: none;
+    object-fit: cover;
+    /* centred on the flames, so the stone ring stays solid and the rising embers fade out */
+    -webkit-mask-image: radial-gradient(50% 46% at 50% 56%, var(--c-void) 60%, transparent);
+    mask-image: radial-gradient(50% 46% at 50% 56%, var(--c-void) 60%, transparent);
     transition: opacity var(--dur-fade) var(--ease-in-out);
   }
-  .hearth[data-live] > :global(*) {
+  /* the live scene fades in under the still first, then the still fades away: no dip in the light */
+  .hearth[data-live] .still {
     opacity: 0;
+    transition-delay: var(--dur-fade);
   }
   .rekindled {
     display: none;

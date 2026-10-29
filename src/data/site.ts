@@ -96,6 +96,18 @@ export const intro = {
 } as const;
 
 /**
+ * The landing's still: one frame of the 3D bonfire, written by `npm run still`. Shown in the hearth
+ * until the live scene takes over, for good where there is no 3D, and small on the loading screen.
+ * width/height are the file's pixels (the script prints them): update them after a new capture.
+ */
+export const bonfireStill = {
+  src: '/images/bonfire-still.webp',
+  width: 1056,
+  height: 945,
+  alt: 'A bonfire ringed with stones, a coiled sword planted in its flames',
+} as const;
+
+/**
  * Pages that are not bonfires still get a title card when you warp to them.
  * `name` is the in-world title, `section` the plain label shown under it.
  */

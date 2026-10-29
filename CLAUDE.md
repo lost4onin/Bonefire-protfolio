@@ -17,7 +17,7 @@ The audience is **recruiters**. The theme is the hook; the content is the point.
 
 ## The non-negotiables
 
-1. **Recruiter-first.** Name, role, email, CV download and "Skip the journey" (→ `/cv`) are visible on every world page. Projects, contact and CV must be reachable in **< 10 seconds** from any page, on a phone, with sound off.
+1. **Recruiter-first.** Name, role and "Skip the journey" (→ `/cv`) head every world page; email and CV download close it in the footer, at the very end of the page (Akrem, 2026-10-29: the footer is not pinned). Projects, contact and CV must be reachable in **< 10 seconds** from any page, on a phone, with sound off.
 2. **Real content is real HTML.** All facts render server-side as semantic HTML (works without JS, crawlable, screen-reader friendly). JS only _enhances_ (3D, transitions, sound, cursor).
 3. **Lore never hides facts.** Every in-world name has its plain label next to it: "Hall of Works · Projects", "Python Master · Python". Never make a recruiter decode the theme.
 4. **Original work only.** No FromSoftware / Round8 assets, logos, fonts, sounds, or verbatim phrases ("YOU DIED", "Bonfire Lit", "Victory Achieved", "Enemy Felled"…). Homage, not copy. Our phrases: "Flame Rekindled", "Vanquished", "Lost in the Fog". **Akrem's exception (2026-10-28):** Dark Souls III boss and ring art on the boss/ring cards, and the fan-made bonfire model with its coiled sword, are live by his choice, credited on `/credits` and possibly replaced later. Don't flag these again; anything _new_ that is game-derived still needs his OK. See `docs/DECISIONS.md`.
@@ -46,6 +46,7 @@ npm run format         # prettier
 npm run models         # optimise assets-src/models/* → public/models/*.glb + budget report
 npm run models:inspect # budget report for what is already in public/models
 npm run images         # assets-src/{bosses,rings,cursor} → public/images/** + src/data/cursor.ts (manifest in the script)
+npm run still          # with dev/preview running: render the 3D landing in Chrome → public/images/bonfire-still.webp
 ```
 
 ## Project map
@@ -62,7 +63,7 @@ src/
   data/      site.ts (identity, bonfires/nav), pilgrim.ts, armoury.ts, tips.ts, credits.ts, cursor.ts (generated)
   pages/     index (landing), cv (DONE), credits, lab (style guide), 404
   styles/    tokens.css (ONLY place for raw values), global.css
-scripts/     optimize-models.mjs, optimize-images.mjs, portrait_grade.py
+scripts/     optimize-models.mjs, optimize-images.mjs, capture-still.mjs, portrait_grade.py
 .githooks/   commit-msg (strips AI attribution; enabled by `npm install`)
 .claude/     settings.json (permissions, attribution off), commands/ (custom slash commands)
 assets-src/  raw source files (never served, committed; LFS for big binaries, ONLY here: Vercel doesn't fetch LFS)
@@ -76,7 +77,7 @@ docs/        the plan, design, content, milestones, decisions, references
 - **Scoped styles** in each `.astro` file. Global CSS only for resets and the few utilities in `global.css` (`.label`, `.dim`, `.num`, `.sr-only`).
 - **Components:** props typed with `interface Props`, a top-of-file JSDoc saying what it is and where it's used. Prefer Astro components with a small `<script>`; no UI framework.
 - **Scripts in components** must survive view transitions: run init on `astro:page-load`, guard against double-binding, clean up on `astro:before-swap` when they own animation loops / WebGL contexts.
-- **Three.js:** one renderer per page, `dispose()` everything on `astro:before-swap`, cap DPR at 1.5 (1 on low tier), pause the loop when the tab is hidden, always ship a static fallback (`Bonfire2D` or an image) for no-WebGL / reduced-motion / low-power.
+- **Three.js:** one renderer per page, `dispose()` everything on `astro:before-swap`, cap DPR at 1.5 (1 on low tier), pause the loop when the tab is hidden, always ship a static fallback for no-WebGL / reduced-motion / low-power: a still image of the scene itself (the landing's comes from `npm run still`; re-run it when the scene changes). Akrem doesn't want the 2D bonfire on screen any more, not even while the 3D loads (2026-10-29); `Bonfire2D` only survives in `/lab`.
 - **Copy voice:** in-world lines are short, archaic-but-clear, second person ("Rest here, traveller"). Facts are plain modern English. See `docs/DESIGN.md` → Voice.
 - **New UI primitive?** Add a specimen to `/lab` first, then use it on a page.
 - **Data flows one way:** `/cv` and the game pages read the same `src/data` + collections, so facts never drift. Never duplicate a fact in a template.
@@ -122,4 +123,5 @@ The current UI is a **placeholder**. Major UI updates are coming, so build for c
 - ✅ **M2 Loading, intro, travel, warp**: loader API for M3, once-per-visitor intro, Travel menu (inline + `M` dialog, bottom sheet on phones), warp on every page change (~1.9s), gauntlet cursor state machine (pack is final, no 3D cursor).
 - ✅ **M3 3D bonfire landing**: Akrem's model + procedural fire/embers/ruins, framed onto the page's hearth, quality tiers with FPS step-down, 2D fallback (incl. software WebGL), loader for the download only. Lighthouse `/` desktop 100, mobile 96.
 - ✅ **M4 The Pilgrim (`/about`)**: Lies of P status window (portrait in the scene layer with parallax, top-bar counters, Status / Chronicle / Oaths tabs with `Q`/`E`, StatList with † notes, Software/AI radar morph, `[ESC] Back`), works without JS. Lighthouse `/about` 100 on desktop and mobile. Open: Akrem's review of the `pilgrim.ts` numbers and briefing (kept as-is for now, his call).
+- ✅ **Fixes after M4 (2026-10-29)**: `vercel.json` clean URLs (`/about`, `/cv`, `/credits` were 404 in production), Nexus shadows (cold blue-black at the edges), see-through header and footer, footer at the page end rising into place, the landing's still of the 3D fire replaces the 2D bonfire.
 - ⏭ Next: **M5** (Hall of Works, `/works`). Keep "Things in flux" above in mind.
