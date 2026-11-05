@@ -11,6 +11,7 @@ import '@/styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import Warp from '@/components/world/Warp.astro';
 import { site } from '@/data/site';
+import { cleanPath } from '@/lib/paths';
 
 interface Props {
   title?: string; // page title; site name is appended
@@ -27,7 +28,8 @@ const {
 } = Astro.props;
 
 const fullTitle = title ? `${title} · ${site.name}` : `${site.name} · ${site.role}`;
-const canonical = new URL(Astro.url.pathname, Astro.site);
+// the clean URL (/about), not the built file (/about.html) that Vercel redirects away from
+const canonical = new URL(cleanPath(Astro.url.pathname), Astro.site);
 ---
 
 <!doctype html>
