@@ -67,8 +67,12 @@ Rules:
 | `TravelMenu`      | Landing (inline) and every world page (dialog, `M`) | Name + plain label + lore line; bottom sheet on phones                                                    |
 | `TitleCard`       | Warp, `/lab`                                        | In-world name, ember hairline, plain label                                                                |
 | `Loader` / `Warp` | `components/world/`                                 | Loader only when a page calls `__loader.expect()`; warp on every internal page change                     |
+| `RelicSlot`       | `/works` inventory                                  | Framed square with the sigil + in-world name + plain name; a link, a tab with JS; `empty` = faint "???"   |
+| `ItemPanel`       | `/works` relic card (M8: Armoury panel)             | Item card: name + plain name, art slot, summary, italic lore, SectionHead blocks, actions; wide = 2 cols  |
+| `Sigil`           | Relic slots and pedestals (`components/relics/`)    | Etched 64×64 icon from `sigils.ts` (`lines` 1.5px + fainter `hatch`), constant stroke at any size         |
+| `Pedestal`        | `/works` card art (`components/relics/`)            | Etched round plinth, the relic's glow, the relic bobbing on it; the 3D viewer's poster                    |
 
-Planned (see MILESTONES.md): `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
+Planned (see MILESTONES.md): `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
 
 **Placeholder status.** Palette, fonts and the rules in this doc stand. The _visuals_ of the current components and pages are placeholders, and a major UI pass is coming once Akrem's models and final names arrive. The cursor is final: Akrem's 2D gauntlet pack (`Cursor`, hotspot at the fingertip). See CLAUDE.md → "Things in flux".
 
@@ -84,7 +88,9 @@ Planned (see MILESTONES.md): `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, 
 | Warp phases             | `--dur-warp-in` 500 · `--dur-warp-hold` 800 · `--dur-warp-out` 600 | Fade to black · title card · page fades in (1900ms, the prototype's rhythm)                                                |
 | Cursor idle             | `--dur-idle` 5000ms                                                | Gauntlet still this long → flexing fingers until it moves                                                                  |
 | Radar morph             | `--dur-morph` 520ms                                                | rAF tween with a small overshoot (JS twin of `--ease-ember`); 0 with reduced motion                                        |
-| Firelight flicker       | `--dur-flicker` 5200ms                                             | Ambient glow loop on `/about` (stepped opacity)                                                                            |
+| Firelight flicker       | `--dur-flicker` 5200ms                                             | Ambient glow loop on `/about` and behind each relic (stepped opacity)                                                      |
+| Relic bob               | `--dur-drift` 3200ms each way                                      | `--ease-in-out`, alternate: the relic rises `--sp-2` over its pedestal and settles; none with reduced motion               |
+| Relic 3D turn           | ~0.4 rad/s (`RelicScene.ts`)                                       | Slow constant turn; a drag turns it and a flick coasts, then eases back. No 3D at all with reduced motion                  |
 | Footer rise             | Scroll-linked (the footer's own entry into view)                   | Contents trail `--sp-8` below and fade in, settling exactly at the page end. CSS scroll timeline; none with reduced motion |
 | Header scrim            | Scroll-linked (first `--sp-6` of scroll)                           | Frosted (`--blur-scrim`) `--c-shade` scrim fades in once content can pass under the header; off on pages that don't scroll |
 | Landing still → 3D      | `--dur-fade` twice                                                 | The live canvas fades in under the still, then the still fades out (no dip in the light)                                   |
@@ -108,6 +114,7 @@ Planned (see MILESTONES.md): `RelicSlot`, `ItemPanel`, `BossCard`, `SkillTile`, 
 
 - **Style:** etched / woodcut / engraving line art, single colour (`currentColor`), 64×64 viewBox, 1.5px strokes, hatching for shade.
 - Used for Armoury icons, relic pedestals and boss cards. One style across all three.
+- Relic sigils (M5) are path data in `src/components/relics/sigils.ts`: `lines` (1.5px) and `hatch` (1px, fainter), drawn with `vector-effect: non-scaling-stroke` so the line stays 1.5px from a 40px slot to a large pedestal. A relic picks one with `icon:` in its frontmatter.
 - No emoji. No stock icon sets in the world UI (a few utility icons in the footer are OK if drawn in the same stroke style).
 
 ## 8. Voice and lore

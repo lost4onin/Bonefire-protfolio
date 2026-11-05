@@ -1,0 +1,228 @@
+---
+/**
+ * One relic's item description on /works: an ItemPanel filled from a `relics` entry.
+ * Plain facts first (project, summary), then the lore, Skill, Scaling (self-assessed), stack,
+ * links when there are any, and the way into the Trial (sealed until M6 opens /works/[slug]).
+ * Art: the relic on its pedestal, its `image` if that file exists in public/, else its sigil.
+ * When the relic has a `model`, the 3D viewer (RelicViewer) takes over [data-relic-art].
+ * Extra attributes (id, hidden, data-*) go on the panel. Used on /works; specimen in /lab.
+ */
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import type { CollectionEntry } from 'astro:content';
+import ItemPanel from '@/components/ui/ItemPanel.astro';
+import SectionHead from '@/components/ui/SectionHead.astro';
+import RuneButton from '@/components/ui/RuneButton.astro';
+import Pedestal from './Pedestal.astro';
+import Sigil from './Sigil.astro';
+import { works } from '@/data/works';
+
+interface Props {
+  relic: CollectionEntry<'relics'>;
+  class?: string;
+  [key: string]: unknown;
+}
+const { relic, class: className, ...rest } = Astro.props;
+const { id, data } = relic;
+
+// public/ is served from the site root. An image named in the frontmatter but not delivered yet
+// falls back to the sigil instead of a broken image.
+const image =
+  data.image && existsSync(join(process.cwd(), 'public', data.image)) ? data.image : undefined;
+if (data.image && !image)
+  console.warn(`[relics] ${id}: ${data.image} is not in public/ yet, showing its sigil`);
+
+const linkKeys = Object.keys(works.links.labels) as (keyof typeof works.links.labels)[];
+const links = linkKeys
+  .filter((k) => data.links[k])
+  .map((k) => ({ href: data.links[k]!, label: works.links.labels[k] }));
+---
+
+<ItemPanel
+  name={data.relicName}
+  plain={data.project}
+  titleId={`${id}-title`}
+  summary={data.summary}
+  lore={data.lore}
+  class={className}
+  {...rest}
+>
+  <div slot="art" class="art" data-relic-art data-model={data.model}>
+    <Pedestal>
+      {
+        image ? (
+          <img
+            src={image}
+            alt={`${data.relicName}, the relic of ${data.project}`}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <Sigil name={data.icon} />
+        )
+      }
+    </Pedestal>
+  </div>
+
+  <section aria-labelledby={`${id}-skill`}>
+    <SectionHead
+      id={`${id}-skill`}
+      name={`${works.skill.name}: ${data.skill.name}`}
+      plain={works.skill.plain}
+    />
+    <p class="skill">{data.skill.text}</p>
+  </section>
+
+  <section aria-labelledby={`${id}-scaling`}>
+    <SectionHead id={`${id}-scaling`} name={works.scaling.name} plain={works.scaling.plain} />
+    <dl class="scaling">
+      {
+        data.scaling.map((s) => (
+          <div class="grade">
+            <dt>{s.attr}</dt>
+            <dd>{s.grade}</dd>
+          </div>
+        ))
+      }
+    </dl>
+    <p class="note">{works.scaling.note}</p>
+  </section>
+
+  <section aria-labelledby={`${id}-stack`}>
+    <SectionHead id={`${id}-stack`} name={works.stack.name} plain={works.stack.plain} />
+    <ul class="chips">
+      {data.stack.map((t) => <li>{t}</li>)}
+    </ul>
+  </section>
+
+  {
+    links.length > 0 && (
+      <section aria-labelledby={`${id}-links`}>
+        <SectionHead id={`${id}-links`} name={works.links.name} plain={works.links.plain} />
+        <ul class="links">
+          {links.map((l) => (
+            <li>
+              <a href={l.href}>{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <Fragment slot="actions">
+    {
+      works.trial.open ? (
+        <RuneButton href={`/works/${id}`}>
+          {works.trial.action}
+          <span class="trial-plain">{works.trial.plain}</span>
+        </RuneButton>
+      ) : (
+        <p class="sealed">
+          <span class="sealed-name">{works.trial.sealed}</span>
+          <span class="sealed-plain">{works.trial.sealedPlain}</span>
+        </p>
+      )
+    }
+  </Fragment>
+</ItemPanel>
+
+<style>
+  .art {
+    position: relative;
+  }
+  /* once the 3D relic is drawn (RelicViewer), the 2D plinth and relic step aside; the glow stays */
+  .art :global(.plinth),
+  .art :global(.relic) {
+    transition: opacity var(--dur-fade) var(--ease-in-out);
+  }
+  .art[data-live] :global(.plinth),
+  .art[data-live] :global(.relic) {
+    opacity: 0;
+  }
+  .skill {
+    max-width: var(--maxw-text);
+  }
+
+  /* Souls "Scaling" line: discipline, then its grade letter */
+  .scaling {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2) var(--sp-6);
+    margin: 0;
+  }
+  .grade {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-2);
+  }
+  .grade dt {
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+  .grade dd {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-24);
+    line-height: 1;
+    color: var(--c-ember);
+  }
+  .note {
+    margin-top: var(--sp-2);
+    font-size: var(--fs-14);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+
+  .chips,
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .chips li {
+    padding: var(--sp-1) var(--sp-3);
+    border: var(--stroke) solid var(--c-line-strong);
+    font-size: var(--fs-16);
+    line-height: var(--lh-snug);
+    color: var(--c-bone);
+  }
+  .links {
+    gap: var(--sp-1) var(--sp-5);
+  }
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target);
+  }
+
+  .trial-plain {
+    font-family: var(--font-body);
+    font-size: var(--fs-16);
+    font-style: italic;
+    letter-spacing: 0;
+    color: var(--c-text-dim);
+  }
+  /* no case study yet: a quiet, unclickable stand-in where the button will be */
+  .sealed {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--sp-2) var(--sp-5);
+    border: var(--stroke) dashed var(--c-line-strong);
+  }
+  .sealed-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-18);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-text-dim);
+  }
+  .sealed-plain {
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+</style>

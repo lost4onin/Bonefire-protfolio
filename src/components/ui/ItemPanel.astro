@@ -1,0 +1,147 @@
+---
+/**
+ * Item description card, Souls style (docs/references/ref-item-description-card.png): the item's
+ * in-world name with its plain name beside it, its art, a plain summary, the lore in italics, then
+ * the default slot (blocks like Skill and Scaling, each under a SectionHead) and the "actions" slot.
+ * Wide containers put the art left of the text; narrow ones stack name, art, text like the card.
+ * Extra attributes (id, hidden, role, data-*) go on the outer <section>.
+ * Used on /works (RelicPanel, one per relic); M8's Armoury panel reuses it. Specimen in /lab.
+ */
+import Frame from './Frame.astro';
+
+interface Props {
+  name: string; // in-world name, e.g. the relic's
+  plain: string; // the plain name a recruiter reads, e.g. the project's
+  titleId: string; // id of the heading, unique on the page
+  summary?: string;
+  lore?: string;
+  class?: string;
+  [key: string]: unknown;
+}
+const { name, plain, titleId, summary, lore, class: className, ...rest } = Astro.props;
+---
+
+<section class:list={['item', className]} aria-labelledby={titleId} {...rest}>
+  <Frame class="item-frame">
+    <h2 class="item-title" id={titleId}>
+      <span class="item-name">{name}</span>
+      <span class="item-plain">
+        <span class="sr-only">, </span>
+        {plain}
+      </span>
+    </h2>
+    {
+      Astro.slots.has('art') && (
+        <div class="item-art">
+          <slot name="art" />
+        </div>
+      )
+    }
+    <div class="item-text">
+      {summary && <p class="item-summary">{summary}</p>}
+      {lore && <p class="item-lore">{lore}</p>}
+      <slot />
+      {
+        Astro.slots.has('actions') && (
+          <div class="item-actions">
+            <slot name="actions" />
+          </div>
+        )
+      }
+    </div>
+  </Frame>
+</section>
+
+<style>
+  .item {
+    container-type: inline-size;
+  }
+  .item-frame {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'title' 'art' 'text';
+    gap: var(--sp-5);
+    padding: var(--sp-6) var(--sp-5);
+  }
+  @container (min-width: 44rem) {
+    .item-frame {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      grid-template-rows: auto 1fr;
+      grid-template-areas: 'art title' 'art text';
+      column-gap: var(--sp-7);
+      padding: var(--sp-7) var(--sp-6);
+    }
+    .item-art {
+      align-self: start;
+      position: sticky;
+      top: var(--sp-9);
+    }
+  }
+  .item-title {
+    grid-area: title;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    padding-bottom: var(--sp-3);
+    border-bottom: var(--stroke) solid var(--c-line-strong);
+  }
+  .item-name {
+    font-size: clamp(var(--fs-24), 3vw, var(--fs-32));
+    color: var(--c-bone);
+    text-shadow: 0 0 24px color-mix(in srgb, var(--c-ember) 16%, transparent);
+  }
+  .item-plain {
+    font-family: var(--font-body);
+    font-size: var(--fs-20);
+    font-style: italic;
+    letter-spacing: 0;
+    color: var(--c-ember);
+  }
+  .item-art {
+    grid-area: art;
+    min-width: 0;
+  }
+  .item-text {
+    grid-area: text;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-5);
+    min-width: 0;
+  }
+  .item-summary {
+    max-width: var(--maxw-text);
+    font-size: var(--fs-18);
+    color: var(--c-bone);
+  }
+  /* the lore sits between hairlines that fade at both ends, like the ruled lines of the card */
+  .item-lore {
+    position: relative;
+    max-width: var(--maxw-text);
+    padding: var(--sp-4) 0;
+    font-size: var(--fs-18);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .item-lore::before,
+  .item-lore::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--stroke);
+    background: linear-gradient(90deg, var(--c-line-strong), var(--c-line) 70%, transparent);
+  }
+  .item-lore::before {
+    top: 0;
+  }
+  .item-lore::after {
+    bottom: 0;
+  }
+  .item-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--sp-4);
+    margin-top: var(--sp-2);
+  }
+</style>

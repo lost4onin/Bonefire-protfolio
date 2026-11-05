@@ -1,0 +1,133 @@
+---
+/**
+ * A relic on its pedestal, like the item art of a Souls description card: an etched round plinth,
+ * the relic's own warm glow (the one light of the panel), and the relic standing on it, bobbing
+ * slowly. The relic is the default slot: a <Sigil> until real art exists, else an <img>.
+ * The 3D viewer (/works) fades in over this and draws its own pedestal; this stays as its poster.
+ * Fills its container's width at 5:4. Used by RelicPanel; specimen in /lab.
+ */
+interface Props {
+  class?: string;
+  [key: string]: unknown;
+}
+const { class: className, ...rest } = Astro.props;
+
+// the plinth's side, fluted: lines evenly spaced around the cylinder, so they crowd at its edges
+const RX = 84;
+const RY = 12;
+const TOP = 14;
+const BAND = 12;
+const flutes = Array.from({ length: 17 }, (_, i) => {
+  const a = ((i - 8) * 10 * Math.PI) / 180;
+  const x = 100 + RX * Math.sin(a);
+  const y = TOP + RY * Math.cos(a);
+  return `M${x.toFixed(1)} ${y.toFixed(1)}v${BAND}`;
+});
+---
+
+<div class:list={['pedestal', className]} {...rest}>
+  <span class="glow" aria-hidden="true"></span>
+  <svg class="plinth" viewBox="0 0 200 44" aria-hidden="true" focusable="false">
+    <path d={`M${100 - RX} ${TOP}a${RX} ${RY} 0 1 0 ${RX * 2} 0a${RX} ${RY} 0 1 0 ${-RX * 2} 0`}
+    ></path>
+    <path d={`M${100 - RX} ${TOP}v${BAND}a${RX} ${RY} 0 0 0 ${RX * 2} 0v${-BAND}`}></path>
+    <path class="hatch" d="M38 14a62 8 0 1 0 124 0a62 8 0 1 0-124 0"></path>
+    {flutes.map((d) => <path class="hatch" d={d} />)}
+    <path class="rim" d={`M${100 - RX} ${TOP}a${RX} ${RY} 0 0 0 ${RX * 2} 0`}></path>
+  </svg>
+  <div class="relic"><slot /></div>
+</div>
+
+<style>
+  .pedestal {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 5 / 4;
+    isolation: isolate;
+  }
+  /* the relic's own light, flickering like the fire on /about */
+  .glow {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: radial-gradient(
+      closest-side at 50% 54%,
+      color-mix(in srgb, var(--c-ember) 20%, transparent),
+      color-mix(in srgb, var(--c-ember-deep) 7%, transparent) 55%,
+      transparent
+    );
+    animation: relic-glow var(--dur-flicker) steps(1) infinite;
+  }
+  /* plinth: 72% wide, its top ellipse's centre at 21% from the bottom, where the relic stands */
+  .plinth {
+    position: absolute;
+    left: 14%;
+    bottom: 8%;
+    width: 72%;
+    overflow: visible;
+    fill: none;
+    stroke: var(--c-text-faint);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+  .plinth path {
+    vector-effect: non-scaling-stroke;
+  }
+  .plinth .hatch {
+    stroke-width: 1;
+    opacity: 0.6;
+  }
+  /* the front edge catches the relic's light */
+  .plinth .rim {
+    stroke: var(--c-ember);
+    opacity: 0.55;
+  }
+  .relic {
+    position: absolute;
+    left: 25%;
+    bottom: 21%;
+    width: 50%;
+    height: 66%;
+    display: grid;
+    place-items: end center;
+    color: var(--c-bone);
+    filter: drop-shadow(0 0 var(--sp-3) var(--c-ember-glow));
+    animation: relic-float var(--dur-drift) var(--ease-in-out) infinite alternate;
+  }
+  .relic > :global(*) {
+    width: 100%;
+    height: 100%;
+  }
+  .relic :global(img) {
+    object-fit: contain;
+    object-position: 50% 100%;
+  }
+  /* a sigil leaves a margin under its drawing: lower it so the drawing, not its box, stands */
+  .relic > :global(svg) {
+    transform: translateY(12%);
+  }
+  /* keyframe names are global: keep them specific */
+  @keyframes relic-float {
+    to {
+      transform: translateY(calc(var(--sp-2) * -1));
+    }
+  }
+  @keyframes relic-glow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    18% {
+      opacity: 0.84;
+    }
+    37% {
+      opacity: 0.96;
+    }
+    58% {
+      opacity: 0.8;
+    }
+    79% {
+      opacity: 0.92;
+    }
+  }
+</style>

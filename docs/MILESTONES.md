@@ -85,12 +85,13 @@ Spec: PLAN.md §3 · reference `docs/references/ref-liesofp-status-window.png` +
 
 Spec: PLAN.md §2 · reference `docs/references/ref-item-description-card.png` · collection `relics`
 
-- [ ] Inventory layout: **left** list/grid of relic slots (icon + relic name + project name), **right** item description panel: pedestal art / 3D relic, `relicName` + `project`, `lore`, `Skill: <name>` + text, `Scaling:` grades, stack chips, links, **Enter the trial** button
-- [ ] Selection with mouse, arrows, and touch; URL hash (`#lumio`) keeps the selection shareable
-- [ ] Empty "???" slots to suggest more relics to come (max 3, subtle)
-- [ ] **3D relic viewer** (optional per relic): if `model` is set, a small rotating Three.js view on a pedestal; otherwise the `image`. Same lifecycle rules as M3
-- [ ] 📄 Images for each relic in `public/images/relics/` (screenshots or art)
-- [ ] Mobile: list becomes horizontal scroll of slots above the panel
+- [x] Inventory layout: **left** list/grid of relic slots (icon + relic name + project name), **right** item description panel: pedestal art / 3D relic, `relicName` + `project`, `lore`, `Skill: <name>` + text, `Scaling:` grades, stack chips, links, **Enter the trial** button. `RelicSlot` + `ItemPanel` (filled by `relics/RelicPanel`); the plain `summary` sits under the title; scaling marked self-assessed; links show once a relic has any; the trial is **sealed** ("Case study coming soon") until M6 sets `works.trial.open`
+- [x] Selection with mouse, arrows, and touch; URL hash (`#lumio`) keeps the selection shareable. Real links upgraded to an ARIA tablist; `replaceState` (no Back-history entries); the hash picks the card before the first paint; works when arriving through the warp
+- [x] Empty "???" slots to suggest more relics to come (max 3, subtle): fill to 6 slots, desktop only
+- [x] **3D relic viewer** (optional per relic): if `model` is set, a small rotating Three.js view on a pedestal; otherwise the `image`. Same lifecycle rules as M3. `three/RelicViewer.astro` + `RelicScene.ts`, drag to turn. No relic has a `model` yet, so `/works` loads no three.js; try it with `/works?quality=high` (stand-in shard)
+- [ ] 📄 Images for each relic in `public/images/relics/` (screenshots or art). _Akrem's call (2026-10-31): the pedestal shows the relic itself (art or render); screenshots go to the M6 case study. Drop `assets-src/relics/<slug>.png` → `npm run images`. Until then each relic shows its etched sigil._
+- [x] Mobile: list becomes horizontal scroll of slots above the panel (scroll-snap, the chosen slot centred)
+- [x] Works without JS (slots are links to every card, stacked); reduced motion: no 3D, no bob. Lighthouse 12 on the production build: desktop 100 / 100 / 100 / 100, mobile 96 / 100 / 100 / 100
 
 ## M6 — The Trial (`/works/[slug]`) 🧱📄 (Day 8)
 

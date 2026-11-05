@@ -18,6 +18,7 @@ scaling:
   - { attr: Machine Learning, grade: A }
   - { attr: RAG, grade: B }
   - { attr: Automation, grade: B }
+icon: lantern
 image: /images/relics/lumio.webp # TODO: add image
 order: 1
 featured: true

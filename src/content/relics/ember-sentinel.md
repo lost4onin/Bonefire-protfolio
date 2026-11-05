@@ -17,6 +17,7 @@ scaling:
   - { attr: Machine Learning, grade: A }
   - { attr: Embedded, grade: B }
   - { attr: Data, grade: B }
+icon: sentinel
 image: /images/relics/ember-sentinel.webp
 order: 3
 featured: false

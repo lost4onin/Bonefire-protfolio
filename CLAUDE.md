@@ -45,7 +45,7 @@ npm run preview        # serve the production build
 npm run format         # prettier
 npm run models         # optimise assets-src/models/* → public/models/*.glb + budget report
 npm run models:inspect # budget report for what is already in public/models
-npm run images         # assets-src/{bosses,rings,cursor} → public/images/** + src/data/cursor.ts (manifest in the script)
+npm run images         # assets-src/{bosses,rings,cursor,relics} → public/images/** + src/data/cursor.ts (manifest in the script)
 npm run still          # with dev/preview running: render the 3D landing in Chrome → public/images/bonfire-still.webp
 ```
 
@@ -55,13 +55,14 @@ npm run still          # with dev/preview running: render the 3D landing in Chro
 src/
   layouts/   BaseLayout (head, fonts, ClientRouter) → WorldLayout (game pages) | PlainLayout (/cv)
   components/
-    ui/      TextBox, RuneButton, KeyPrompt, Frame, TravelMenu, TitleCard  ← reuse these; extend before inventing
+    ui/      TextBox, RuneButton, KeyPrompt, Frame, TravelMenu, TitleCard, ItemPanel  ← reuse these; extend before inventing
     world/   Fog, Bonfire2D, Cursor, Loader, Warp          ← atmosphere, shared across pages
-    three/   (M3+) scene modules, loaders, quality tiers
+    three/   BonfireScene (/), RelicScene (/works), loaders, quality tiers, afterPaint, palette
+    relics/  Sigil (+ sigils.ts), Pedestal, RelicPanel     ← /works
     armoury/icons/ (M8) etched SVG skill icons
   content/   relics/*.md, bosses/*.md                     ← schemas in src/content.config.ts
-  data/      site.ts (identity, bonfires/nav), pilgrim.ts, armoury.ts, tips.ts, credits.ts, cursor.ts (generated)
-  pages/     index (landing), cv (DONE), credits, lab (style guide), 404
+  data/      site.ts (identity, bonfires/nav), pilgrim.ts, works.ts, armoury.ts, tips.ts, credits.ts, cursor.ts (generated)
+  pages/     index (landing), about, works, cv (DONE), credits, lab (style guide), 404
   styles/    tokens.css (ONLY place for raw values), global.css
 scripts/     optimize-models.mjs, optimize-images.mjs, capture-still.mjs, portrait_grade.py
 .githooks/   commit-msg (strips AI attribution; enabled by `npm install`)
@@ -124,4 +125,5 @@ The current UI is a **placeholder**. Major UI updates are coming, so build for c
 - ✅ **M3 3D bonfire landing**: Akrem's model + procedural fire/embers/ruins, framed onto the page's hearth, quality tiers with FPS step-down, 2D fallback (incl. software WebGL), loader for the download only. Lighthouse `/` desktop 100, mobile 96.
 - ✅ **M4 The Pilgrim (`/about`)**: Lies of P status window (portrait in the scene layer with parallax, top-bar counters, Status / Chronicle / Oaths tabs with `Q`/`E`, StatList with † notes, Software/AI radar morph, `[ESC] Back`), works without JS. Lighthouse `/about` 100 on desktop and mobile. Open: Akrem's review of the `pilgrim.ts` numbers and briefing (kept as-is for now, his call).
 - ✅ **Fixes after M4 (2026-10-29)**: `vercel.json` clean URLs (`/about`, `/cv`, `/credits` were 404 in production), Nexus shadows (cold blue-black at the edges), see-through header and footer, footer at the page end rising into place, the landing's still of the 3D fire replaces the 2D bonfire.
-- ⏭ Next: **M5** (Hall of Works, `/works`). Keep "Things in flux" above in mind.
+- ✅ **M5 Hall of Works (`/works`)**: relic slots + item description card (etched sigil on a pedestal until art arrives), ARIA tablist with shareable `#slug`, faint "???" slots, sideways strip on phones, works without JS; 3D relic viewer ready for GLBs (none yet, so `/works` loads no three.js; test with `?quality=high`); `npm run images` relic preset. Lighthouse `/works` desktop 100, mobile 96. Open: relic images, models and links (CONTENT.md → Open content).
+- ⏭ Next: **M6** (The Trial, `/works/[slug]`): set `works.trial.open` in `src/data/works.ts`, re-enable the links on `/cv`. Keep "Things in flux" above in mind.

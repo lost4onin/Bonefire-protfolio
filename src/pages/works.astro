@@ -1,0 +1,312 @@
+---
+/**
+ * /works — "Hall of Works": the projects as relics in a Souls inventory.
+ * Desktop: the slots in a column on the left, the chosen relic's description card on the right.
+ * Phones: the slots become a strip you scroll sideways, above the card. Faint "???" slots after the
+ * relics hint at more to come (desktop only).
+ * Every relic's card is in the HTML. Without JS the slots are links to the cards and every card
+ * shows, stacked. With JS the slots become an ARIA tablist (click, tap, arrows, Home/End) and one
+ * card shows; `#slug` in the URL picks the relic (set before the first paint, kept up to date with
+ * replaceState so the link can be shared without filling the Back history).
+ * The `#slug` anchors exist only without JS (inside <noscript>, which Astro's router also drops):
+ * with JS the browser finds nothing to jump to, so the chosen card shows where it is and the slot
+ * strip stays in view on phones.
+ * Facts come from src/content/relics/*.md, labels from src/data/works.ts.
+ */
+import { getCollection } from 'astro:content';
+import WorldLayout from '@/layouts/WorldLayout.astro';
+import KeyPrompt from '@/components/ui/KeyPrompt.astro';
+import RelicSlot from '@/components/ui/RelicSlot.astro';
+import RelicPanel from '@/components/relics/RelicPanel.astro';
+import RelicViewer from '@/components/three/RelicViewer.astro';
+import { site, bonfires } from '@/data/site';
+import { works } from '@/data/works';
+
+const place = bonfires.find((b) => b.id === 'works')!;
+const relics = (await getCollection('relics', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
+const first = relics.find((r) => r.data.featured) ?? relics[0];
+const emptySlots = Math.min(works.empty.max, Math.max(0, works.empty.fill - relics.length));
+
+// a relic's slug is its no-JS anchor's id (#lumio): it must not take an id the layout already uses
+const layoutIds = ['main', 'cursor', 'warp', 'travel-dialog', 'scene3d'];
+for (const r of relics)
+  if (layoutIds.includes(r.id))
+    throw new Error(`relic slug "${r.id}" clashes with an element id on every world page`);
+---
+
+<WorldLayout
+  title={place.section}
+  description={`Projects by ${site.name}: ${relics.map((r) => r.data.project).join(', ')}. What each one does, its stack and links.`}
+>
+  <KeyPrompt slot="prompts" keys={['ESC']} label="Back" href="/" />
+
+  <div class="hall" data-hall>
+    <header class="plate">
+      <h1 class="title">
+        <span class="lore">{place.name}</span>
+        <span class="plain">
+          <span class="sr-only">, </span>
+          {place.section}
+        </span>
+      </h1>
+      <p class="lore-line">{place.lore}</p>
+    </header>
+
+    <div class="inventory">
+      <div class="slots" data-slots data-label={`${place.name}: relics`}>
+        {
+          relics.map((r) => (
+            <RelicSlot
+              href={`#${r.id}`}
+              name={r.data.relicName}
+              plain={r.data.project}
+              icon={r.data.icon}
+              data-slot={r.id}
+            />
+          ))
+        }
+        {
+          Array.from({ length: emptySlots }, () => (
+            <RelicSlot empty name={works.empty.name} plain={works.empty.plain} />
+          ))
+        }
+      </div>
+
+      <div class="cards">
+        {
+          relics.map((r) => (
+            <>
+              <noscript>
+                <span class="anchor" id={r.id} />
+              </noscript>
+              <RelicPanel
+                relic={r}
+                id={`relic-${r.id}`}
+                hidden={r !== first}
+                data-relic
+                data-slug={r.id}
+              />
+            </>
+          ))
+        }
+      </div>
+    </div>
+    <RelicViewer />
+  </div>
+
+  <!-- before the first paint: show the card the #hash asks for and light its slot -->
+  <script is:inline data-astro-rerun>
+    (function () {
+      var hall = document.querySelector('[data-hall]');
+      if (!hall) return;
+      var cards = hall.querySelectorAll('[data-relic]');
+      var want = '';
+      try {
+        want = decodeURIComponent(location.hash.slice(1));
+      } catch (e) {}
+      var pick = hall.querySelector('[data-relic]:not([hidden])') || cards[0];
+      for (var i = 0; i < cards.length; i++) if (cards[i].dataset.slug === want) pick = cards[i];
+      if (!pick) return;
+      for (var j = 0; j < cards.length; j++) cards[j].hidden = cards[j] !== pick;
+      var slots = hall.querySelectorAll('[data-slot]');
+      for (var k = 0; k < slots.length; k++)
+        slots[k].setAttribute('aria-selected', String(slots[k].dataset.slot === pick.dataset.slug));
+    })();
+  </script>
+  <noscript>
+    <style is:inline>
+      [data-relic][hidden] {
+        display: block !important;
+      }
+      [data-relic] ~ [data-relic] {
+        margin-top: var(--sp-7);
+      }
+      [data-hall] .anchor {
+        display: block;
+        scroll-margin-top: var(--sp-4);
+      }
+      @media (min-width: 960px) {
+        [data-hall] .anchor {
+          scroll-margin-top: var(--sp-9);
+        }
+      }
+    </style>
+  </noscript>
+</WorldLayout>
+
+<script>
+  import { bindTablist } from '@/lib/tablist';
+
+  function init() {
+    const hall = document.querySelector<HTMLElement>('[data-hall]');
+    if (!hall || hall.dataset.bound) return;
+    hall.dataset.bound = '1';
+    const ac = new AbortController();
+    const { signal } = ac;
+    const list = hall.querySelector<HTMLElement>('[data-slots]')!;
+    const slots = [...list.querySelectorAll<HTMLAnchorElement>('a[data-slot]')];
+    const cards = slots.map((s) =>
+      hall.querySelector<HTMLElement>(`[data-slug="${s.dataset.slot}"]`)!,
+    );
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // the links become a tablist; each card stays labelled by its own heading
+    list.setAttribute('role', 'tablist');
+    list.setAttribute('aria-label', list.dataset.label!);
+    if (matchMedia('(min-width: 960px)').matches) list.setAttribute('aria-orientation', 'vertical');
+    slots.forEach((s, i) => {
+      s.setAttribute('role', 'tab');
+      s.setAttribute('aria-controls', cards[i]!.id);
+    });
+    cards.forEach((c) => c.setAttribute('role', 'tabpanel'));
+
+    /** phones: bring the chosen slot to the middle of the strip (the desktop column doesn't scroll) */
+    const centre = (slot: HTMLElement, smooth: boolean) => {
+      if (list.scrollWidth <= list.clientWidth) return;
+      const left = slot.offsetLeft - (list.clientWidth - slot.offsetWidth) / 2;
+      list.scrollTo({ left, behavior: smooth && !reduced ? 'smooth' : 'auto' });
+    };
+
+    const ctl = bindTablist(list, (i) => {
+      cards.forEach((c, j) => (c.hidden = j !== i));
+      const slug = cards[i]!.dataset.slug!;
+      // keep Astro's router state (scroll positions) in the entry we rewrite
+      if (location.hash !== `#${slug}`) history.replaceState(history.state, '', `#${slug}`);
+      centre(slots[i]!, true);
+      hall.dispatchEvent(new CustomEvent('hall:select', { detail: { slug } }));
+    });
+    ctl.select(ctl.index); // roving tabindex for the slot lit before the first paint
+    centre(slots[ctl.index]!, false);
+
+    // the slots are links (#slug) for no-JS visitors: with JS a click only selects
+    list.addEventListener(
+      'click',
+      (e) => {
+        if ((e.target as HTMLElement).closest('[role="tab"]')) e.preventDefault();
+      },
+      { signal },
+    );
+    // Space selects like on a tab instead of scrolling the page
+    list.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === ' ' && (e.target as HTMLElement).getAttribute('role') === 'tab')
+          e.preventDefault();
+      },
+      { signal },
+    );
+    // someone edits the hash, or follows a #slug link on this page
+    window.addEventListener(
+      'hashchange',
+      () => {
+        const i = cards.findIndex((c) => `#${c.dataset.slug}` === location.hash);
+        if (i >= 0) ctl.select(i);
+      },
+      { signal },
+    );
+
+    document.addEventListener('astro:before-swap', () => ac.abort(), { once: true });
+  }
+
+  init();
+  document.addEventListener('astro:page-load', init);
+</script>
+
+<style>
+  .hall {
+    max-width: var(--maxw);
+    margin: 0 auto;
+  }
+  .plate {
+    margin-bottom: var(--sp-6);
+  }
+  .title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--sp-4);
+  }
+  .title .lore {
+    font-size: clamp(var(--fs-32), 4.6vw, var(--fs-56));
+    color: var(--c-bone);
+    text-shadow: 0 0 28px color-mix(in srgb, var(--c-ember) 18%, transparent);
+  }
+  .title .plain {
+    font-family: var(--font-body);
+    font-size: var(--fs-20);
+    font-style: italic;
+    letter-spacing: 0;
+    color: var(--c-text-dim);
+  }
+  .lore-line {
+    margin-top: var(--sp-2);
+    font-style: italic;
+    color: var(--c-ember);
+  }
+
+  .inventory {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-5);
+  }
+
+  /* phones and tablets: a strip of slots you scroll sideways, the next one peeking in */
+  .slots {
+    position: relative;
+    display: flex;
+    gap: var(--sp-2);
+    margin-inline: calc(var(--gutter) * -1);
+    padding: var(--sp-1) var(--gutter);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: var(--gutter);
+    scrollbar-width: none;
+  }
+  .slots::-webkit-scrollbar {
+    display: none;
+  }
+  .slots > :global(.slot) {
+    flex: 0 0 min(78vw, 19rem);
+    scroll-snap-align: start;
+  }
+  .slots > :global(.empty) {
+    display: none;
+  }
+
+  .cards > :global([data-relic]:not([hidden])) {
+    animation: relic-card-in var(--dur-base) var(--ease-out);
+  }
+  @keyframes relic-card-in {
+    from {
+      opacity: 0;
+      transform: translateY(var(--sp-2));
+    }
+  }
+
+  /* desktop: the slots in a column that stays in view beside the card */
+  @media (min-width: 960px) {
+    .inventory {
+      grid-template-columns: minmax(16rem, 21rem) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--sp-7);
+    }
+    .slots {
+      position: sticky;
+      top: var(--sp-9);
+      flex-direction: column;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+      scroll-snap-type: none;
+    }
+    .slots > :global(.slot) {
+      flex: none;
+    }
+    .slots > :global(.empty) {
+      display: flex;
+    }
+  }
+</style>

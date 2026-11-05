@@ -1,0 +1,110 @@
+---
+/**
+ * 3D relic viewer island for /works: one small WebGL view that moves into the chosen relic's art
+ * box ([data-relic-art]) and shows its model turning on a pedestal (RelicScene.ts); drag to turn.
+ * Only relics with a `model` in their frontmatter get it. Until one is chosen the page fetches no
+ * three.js at all, and never where sceneQuality.ts says no 3D (reduced motion, Save-Data, no
+ * hardware WebGL, weak phones): those keep the 2D art, which also stays under the canvas as its
+ * poster and fades out once the first 3D frame is drawn ([data-live]). No loading screen: the card
+ * is already readable while the model downloads.
+ * Paused when the tab is hidden or the art is scrolled away; disposed on astro:before-swap.
+ * Debug: /works?quality=high|low puts a stand-in relic in the viewer for relics without a model, so
+ * it can be tried before any model exists; ?quality=2d turns it off.
+ */
+---
+
+<canvas class="relic3d" data-relic3d data-cursor="grab" aria-hidden="true" hidden></canvas>
+
+<script>
+  import { pickMode, type Mode } from './sceneQuality';
+  import { afterContentPaint } from './afterPaint';
+  import type { RelicScene } from './RelicScene';
+
+  let scene: RelicScene | null = null;
+  let mode: Promise<Mode> | null = null; // decided once per page, when a relic first needs 3D
+  let seq = 0; // the latest choice wins; slower earlier ones give up
+
+  function teardown() {
+    seq++;
+    scene?.dispose();
+    scene = null;
+    mode = null;
+  }
+
+  /** Follow the card that is showing: give it the 3D view, or step aside for its 2D art. */
+  async function follow(canvas: HTMLCanvasElement) {
+    const token = ++seq;
+    const art = document.querySelector<HTMLElement>('[data-relic]:not([hidden]) [data-relic-art]');
+    const previous = canvas.parentElement;
+    if (previous !== art) {
+      delete previous?.dataset.live;
+      delete canvas.dataset.live;
+      canvas.hidden = true;
+      scene?.pause();
+    }
+    if (!art) return;
+    const model = art.dataset.model;
+    const forced = new URLSearchParams(location.search).get('quality');
+    if (!model && forced !== 'high' && forced !== 'low') return;
+
+    mode ??= pickMode().then(({ mode: m, reason }) => {
+      canvas.dataset.mode = m;
+      canvas.dataset.reason = reason;
+      return m;
+    });
+    const m = await mode;
+    if (m === '2d' || token !== seq) return;
+    try {
+      if (!scene) {
+        await afterContentPaint();
+        const { RelicScene, paletteFromTokens } = await import('./RelicScene');
+        if (token !== seq || !canvas.isConnected) return;
+        scene ??= new RelicScene(canvas, m, paletteFromTokens());
+      }
+      art.append(canvas);
+      canvas.hidden = false;
+      await scene.show(model ?? null);
+      if (token !== seq) return;
+      requestAnimationFrame(() => {
+        if (token !== seq) return;
+        canvas.dataset.live = '1';
+        art.dataset.live = '1';
+      });
+    } catch (err) {
+      console.warn('[relic3d] keeping the 2D art', err);
+      canvas.hidden = true;
+      delete art.dataset.live;
+    }
+  }
+
+  function boot() {
+    const canvas = document.querySelector<HTMLCanvasElement>('[data-relic3d]');
+    const hall = document.querySelector<HTMLElement>('[data-hall]');
+    if (!canvas || !hall || canvas.dataset.booted) return;
+    canvas.dataset.booted = '1';
+    hall.addEventListener('hall:select', () => follow(canvas));
+    follow(canvas);
+  }
+
+  boot();
+  document.addEventListener('astro:page-load', boot);
+  document.addEventListener('astro:before-swap', teardown);
+</script>
+
+<style>
+  .relic3d {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    touch-action: pan-y; /* sideways drags turn the relic, vertical swipes scroll the page */
+    transition: opacity var(--dur-fade) var(--ease-in-out);
+  }
+  .relic3d[hidden] {
+    display: none;
+  }
+  .relic3d[data-live] {
+    opacity: 1;
+  }
+</style>

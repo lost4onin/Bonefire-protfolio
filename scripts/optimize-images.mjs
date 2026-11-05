@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Image pipeline.  assets-src/{bosses,rings,cursor}/**  →  public/images/**  (+ src/data/cursor.ts)
+ * Image pipeline.  assets-src/{bosses,rings,cursor,relics}/**  →  public/images/**  (+ src/data/cursor.ts)
  *
  *   npm run images              process every job in JOBS below
  *   npm run images -- rings     only jobs whose preset or output contains "rings"
@@ -11,14 +11,17 @@
  *   ring    → public/images/armoury/rings/<id>.webp 256×256 (+ @2x 512×512 when the source is big enough)
  *   cursor  → public/images/cursor/<name>.png 32×32 + @2x 64×64, trimmed, transparent.
  *             Reads Windows .cur / .ani directly. Hotspots are written to src/data/cursor.ts.
+ *   relic   → public/images/relics/<slug>.webp, within 1000×1000, ≤ 200 KB, alpha kept. No manifest
+ *             entry needed: every image in assets-src/relics/ named after a relic's slug
+ *             (lumio.png, hiki.jpg, ember-sentinel.webp) becomes the art on its /works pedestal.
  *
  * Rules: never upscale (a size that would need upscaling is skipped and reported), metadata stripped
  * (sharp drops it unless asked), kebab-case output names. Uses sharp, which ships with Astro.
  * Mapping source → output is a DATA decision: change JOBS, re-run with --force.
  */
 import { createRequire } from 'node:module';
-import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
-import { dirname, extname } from 'node:path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
+import { basename, dirname, extname } from 'node:path';
 
 const sharp = createRequire(import.meta.url)('sharp');
 
@@ -68,11 +71,29 @@ const JOBS = [
   },
   { preset: 'cursor', src: 'assets-src/cursor/zoom-in.cur', out: 'zoom-in', hotspot: [37, 38] },
   { preset: 'cursor', src: 'assets-src/cursor/zoom-out.cur', out: 'zoom-out', hotspot: [37, 38] },
+
+  // Relic art: one job per image found in assets-src/relics/, named by the relic's slug
+  ...relicJobs(),
 ];
 
 const BOSS = { dir: 'public/images/bosses', maxWidth: 1200, maxKB: 200 };
 const RING = { dir: 'public/images/armoury/rings', size: 256 };
 const CURSOR = { dir: 'public/images/cursor', size: 32, data: 'src/data/cursor.ts' };
+const RELIC = { dir: 'public/images/relics', maxSide: 1000, maxKB: 200 };
+
+function relicJobs() {
+  const src = 'assets-src/relics';
+  if (!existsSync(src)) return [];
+  return readdirSync(src)
+    .filter((f) => /.(png|jpe?g|webp|avif|tiff?)$/i.test(f))
+    .map((f) => ({
+      preset: 'relic',
+      src: `${src}/${f}`,
+      out: basename(f, extname(f))
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-'),
+    }));
+}
 
 // ── CLI ────────────────────────────────────────────────────────────────────────
 const args = process.argv.slice(2);
@@ -199,6 +220,24 @@ async function boss(job) {
   }
 }
 
+async function relic(job) {
+  const out = `${RELIC.dir}/${job.out}.webp`;
+  const meta = await sharp(job.src).metadata();
+  if (Math.max(meta.width, meta.height) < 600)
+    console.warn(`   ⚠ ${job.src} is only ${meta.width}×${meta.height} (not upscaled)`);
+  // Lower quality until it fits the size budget.
+  for (const quality of [82, 74, 66, 58, 50]) {
+    const buf = await sharp(job.src)
+      .resize(RELIC.maxSide, RELIC.maxSide, { fit: 'inside', withoutEnlargement: true })
+      .webp({ quality, alphaQuality: 90, effort: 6 })
+      .toBuffer();
+    if (buf.length / 1024 <= RELIC.maxKB || quality === 50) {
+      await save(sharp(buf), out, job.src);
+      return;
+    }
+  }
+}
+
 async function ring(job) {
   const meta = await sharp(job.src).metadata();
   const longest = Math.max(meta.width, meta.height);
@@ -304,7 +343,7 @@ ${body},
 }
 
 // ── Run ────────────────────────────────────────────────────────────────────────
-const presets = { boss, ring, cursor };
+const presets = { boss, ring, cursor, relic };
 for (const job of jobs) {
   console.log(`→ ${job.src}`);
   await presets[job.preset](job);

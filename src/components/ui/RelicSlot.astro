@@ -1,0 +1,144 @@
+---
+/**
+ * One inventory slot on /works: the relic's sigil in a framed square, its in-world name, and the
+ * project's plain name under it. A real link to the relic's panel (`#slug`), so it works without JS;
+ * the page turns the slots into an ARIA tablist and marks the chosen one `aria-selected`.
+ * `empty` draws a faint "???" slot: decoration only, hidden from screen readers.
+ * Specimens in /lab.
+ */
+import Sigil from '@/components/relics/Sigil.astro';
+import type { SigilName } from '@/components/relics/sigils';
+
+interface Props {
+  name: string;
+  plain: string;
+  href?: string; // the relic's panel; not used when `empty`
+  icon?: SigilName;
+  empty?: boolean;
+  class?: string;
+  [key: string]: unknown; // data-*, role, aria-*: forwarded to the slot
+}
+const { name, plain, href, icon = 'shard', empty = false, class: className, ...rest } = Astro.props;
+---
+
+{
+  empty ? (
+    <div class:list={['slot', 'empty', className]} aria-hidden="true" {...rest}>
+      <span class="box">
+        <span class="unknown">?</span>
+      </span>
+      <span class="text">
+        <span class="name">{name}</span>
+        <span class="plain">{plain}</span>
+      </span>
+    </div>
+  ) : (
+    <a class:list={['slot', className]} href={href} {...rest}>
+      <span class="box">
+        <Sigil name={icon} class="sigil" />
+      </span>
+      <span class="text">
+        <span class="name">{name}</span>
+        <span class="plain">
+          <span class="sr-only">, </span>
+          {plain}
+        </span>
+      </span>
+    </a>
+  )
+}
+
+<style>
+  .slot {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-4);
+    min-width: 0;
+    padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-2);
+    border: var(--stroke) solid transparent;
+    color: var(--c-text-dim);
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+  }
+  a.slot:hover {
+    background: var(--c-ember-wash);
+    color: var(--c-bone);
+  }
+  /* the framed square, an inventory cell */
+  .box {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    background: color-mix(in srgb, var(--c-ash) 70%, transparent);
+    border: var(--stroke) solid var(--c-line-strong);
+    box-shadow:
+      inset 0 0 0 3px var(--c-void),
+      inset 0 0 0 4px var(--c-line);
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out);
+  }
+  .sigil {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+  .text {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .name {
+    font-family: var(--font-display);
+    font-size: var(--fs-18);
+    letter-spacing: 0.06em;
+    line-height: var(--lh-snug);
+    color: var(--c-bone);
+  }
+  .plain {
+    font-size: var(--fs-16);
+    font-style: italic;
+    line-height: var(--lh-snug);
+  }
+
+  /* the chosen relic: lit cell, ember name, a hairline frame around the row */
+  .slot[aria-selected='true'] {
+    background: var(--c-ember-wash);
+    border-color: var(--c-line-strong);
+    color: var(--c-bone);
+  }
+  .slot[aria-selected='true'] .box {
+    border-color: var(--c-ember);
+    box-shadow:
+      inset 0 0 0 3px var(--c-void),
+      inset 0 0 0 4px var(--c-line),
+      0 0 14px var(--c-ember-glow);
+  }
+  .slot[aria-selected='true'] .sigil {
+    color: var(--c-ember);
+  }
+  .slot[aria-selected='true'] .name {
+    color: var(--c-ember);
+  }
+
+  .empty {
+    opacity: 0.5;
+  }
+  .empty .box {
+    border-style: dashed;
+    box-shadow: none;
+    background: transparent;
+  }
+  .unknown {
+    font-family: var(--font-display);
+    font-size: var(--fs-24);
+    color: var(--c-text-faint);
+  }
+  .empty .name {
+    color: var(--c-text-faint);
+  }
+</style>
