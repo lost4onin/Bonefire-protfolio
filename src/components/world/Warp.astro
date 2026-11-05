@@ -4,6 +4,9 @@
  * new page fades in. Lives in BaseLayout with `transition:persist`, so it covers all pages.
  * Timing comes from tokens: --dur-warp-in + --dur-warp-hold + --dur-warp-out ≤ --dur-warp (2s).
  * Reduced motion: the tokens shrink it to a 150ms cross-fade and the title card is hidden.
+ * The fog gate (M6): going INTO a Trial (/works/<slug>, from the Hall, a previous/next link, /cv…)
+ * you walk through a wall of fog instead: it rises and fills the view (--dur-gate-in), the page
+ * changes behind it, and it parts around you as you pass (--dur-gate-out). Under 1s, no title card.
  * Emits `ff:warp` on document with detail 'start' | 'end' (the cursor shows its wait state).
  * Astro's own page animation is turned off (`transition:animate="none"` on <html>), the veil does it.
  */
@@ -12,12 +15,16 @@ import TitleCard from '@/components/ui/TitleCard.astro';
 
 <div id="warp" class="warp" aria-hidden="true" transition:persist="warp">
   <div class="veil"></div>
+  <div class="gate">
+    <span class="gate-fog gate-far"></span>
+    <span class="gate-fog gate-near"></span>
+  </div>
   <TitleCard class="warp-title" />
 </div>
 
 <script>
   import { durationMs } from '@/lib/tokens';
-  import { placeFor } from '@/data/site';
+  import { placeFor, isTrialPath } from '@/data/site';
 
   const wait = (t: number) => new Promise((r) => setTimeout(r, t));
   const emit = (detail: 'start' | 'end') =>
@@ -31,6 +38,8 @@ import TitleCard from '@/components/ui/TitleCard.astro';
     document.addEventListener('astro:before-preparation', (e) => {
       const warp = document.getElementById('warp');
       if (!warp) return;
+      const gate = isTrialPath(e.to.pathname);
+      warp.dataset.kind = gate ? 'gate' : 'warp';
       const place = placeFor(e.to.pathname);
       warp.querySelector('[data-tc-name]')!.textContent = place.name;
       warp.querySelector('[data-tc-section]')!.textContent = place.section;
@@ -39,9 +48,12 @@ import TitleCard from '@/components/ui/TitleCard.astro';
       warp.dataset.phase = 'in';
       emit('start');
 
-      // Swap only once the veil is black and the title card has been seen.
+      // Swap only once the veil is black and the title card has been seen (the gate: once the fog
+      // fills the view).
       const load = e.loader;
-      const minimum = durationMs('--dur-warp-in') + durationMs('--dur-warp-hold');
+      const minimum = gate
+        ? durationMs('--dur-gate-in')
+        : durationMs('--dur-warp-in') + durationMs('--dur-warp-hold');
       e.loader = async () => {
         await Promise.all([load(), wait(minimum)]);
       };
@@ -51,10 +63,11 @@ import TitleCard from '@/components/ui/TitleCard.astro';
       const warp = document.getElementById('warp');
       if (!warp || warp.dataset.phase !== 'in') return;
       warp.dataset.phase = 'out';
+      const out = warp.dataset.kind === 'gate' ? '--dur-gate-out' : '--dur-warp-out';
       endTimer = window.setTimeout(() => {
         delete warp.dataset.phase;
         emit('end');
-      }, durationMs('--dur-warp-out'));
+      }, durationMs(out));
     });
   }
 </script>
@@ -78,7 +91,7 @@ import TitleCard from '@/components/ui/TitleCard.astro';
     opacity: 0;
     transition: opacity var(--dur-warp-out) var(--ease-in-out);
   }
-  .warp[data-phase='in'] .veil {
+  .warp[data-phase='in']:not([data-kind='gate']) .veil {
     opacity: 1;
     transition-duration: var(--dur-warp-in);
   }
@@ -87,13 +100,100 @@ import TitleCard from '@/components/ui/TitleCard.astro';
     opacity: 0;
     transition: opacity var(--dur-warp-out) var(--ease-out);
   }
-  .warp[data-phase='in'] :global(.warp-title) {
+  .warp[data-phase='in']:not([data-kind='gate']) :global(.warp-title) {
     opacity: 1;
     transition-duration: var(--dur-base);
     transition-delay: calc(var(--dur-warp-in) * 0.6);
   }
-  .warp[data-phase='in'] :global(.tc-name) {
+  .warp[data-phase='in']:not([data-kind='gate']) :global(.tc-name) {
     animation: breathe var(--dur-warp) var(--ease-out) both;
+  }
+
+  /* ── The fog gate: a misty wall that rises, fills the view, then parts as you pass through ── */
+  /* opaque at its fullest, so the page swap behind it never shows; on the way out it lingers,
+     then thins (ease-in-out), while the mist keeps rushing past */
+  .gate {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: var(--c-ash);
+    opacity: 0;
+    transition: opacity var(--dur-gate-out) var(--ease-in-out);
+  }
+  .gate-fog {
+    position: absolute;
+    inset: -30%;
+    transform: scale(0.55);
+    transition: transform var(--dur-gate-out) var(--ease-out);
+    will-change: transform;
+  }
+  /* the wall: a pale glow at its heart (bone, a touch of the cold haze), wisps drifting in front.
+     Soft gradients only: no texture to tile or rasterise mid-navigation */
+  .gate-far {
+    background:
+      radial-gradient(
+        ellipse 46% 40% at 50% 50%,
+        color-mix(in srgb, var(--c-bone) 22%, transparent),
+        transparent 72%
+      ),
+      radial-gradient(
+        ellipse 30% 26% at 30% 38%,
+        color-mix(in srgb, var(--c-haze) 20%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 32% 28% at 70% 62%,
+        color-mix(in srgb, var(--c-haze) 18%, transparent),
+        transparent 70%
+      );
+  }
+  .gate-near {
+    background:
+      radial-gradient(
+        ellipse 22% 9% at 24% 30%,
+        color-mix(in srgb, var(--c-bone) 16%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 26% 8% at 72% 26%,
+        color-mix(in srgb, var(--c-bone) 12%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 30% 10% at 38% 66%,
+        color-mix(in srgb, var(--c-bone) 14%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 24% 8% at 78% 72%,
+        color-mix(in srgb, var(--c-bone) 12%, transparent),
+        transparent 70%
+      ),
+      radial-gradient(
+        ellipse 18% 7% at 54% 46%,
+        color-mix(in srgb, var(--c-bone) 18%, transparent),
+        transparent 70%
+      );
+  }
+  /* in: the wall comes at you and fills the view (the near mist faster than the far one) */
+  .warp[data-kind='gate'][data-phase='in'] .gate {
+    opacity: 1;
+    transition: opacity var(--dur-gate-in) var(--ease-in-out);
+  }
+  .warp[data-kind='gate'][data-phase='in'] .gate-far {
+    transform: scale(1.15);
+    transition: transform var(--dur-gate-in) var(--ease-in-out);
+  }
+  .warp[data-kind='gate'][data-phase='in'] .gate-near {
+    transform: scale(1.4);
+    transition: transform var(--dur-gate-in) var(--ease-in-out);
+  }
+  /* out: you pass through, the mist rushes past and thins */
+  .warp[data-kind='gate'][data-phase='out'] .gate-far {
+    transform: scale(1.9);
+  }
+  .warp[data-kind='gate'][data-phase='out'] .gate-near {
+    transform: scale(2.8);
   }
   @keyframes breathe {
     from {

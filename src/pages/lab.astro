@@ -21,17 +21,15 @@ import RelicPanel from '@/components/relics/RelicPanel.astro';
 import Pedestal from '@/components/relics/Pedestal.astro';
 import Sigil from '@/components/relics/Sigil.astro';
 import { sigilNames } from '@/components/relics/sigils';
-import { getCollection } from 'astro:content';
 import { cursors } from '@/data/cursor';
 import { bonfires } from '@/data/site';
 import { attributes, radar, scales } from '@/data/pilgrim';
 import { works } from '@/data/works';
+import { getRelics } from '@/lib/relics';
 
 if (import.meta.env.PROD) return Astro.redirect('/');
 
-const relics = (await getCollection('relics', ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+const relics = await getRelics();
 
 const colors = [
   ['--c-void', '#060505', 'page ground'],
@@ -241,6 +239,13 @@ const colors = [
     </section>
 
     <section>
+      <h2 class="label">Fog gate (entering a Trial, /works/&lt;slug&gt;)</h2>
+      <div class="row tight">
+        <RuneButton variant="ghost" data-test-gate>Walk through the fog gate</RuneButton>
+      </div>
+    </section>
+
+    <section>
       <h2 class="label">Cursor states (hover the zones)</h2>
       <div class="row tight">
         {
@@ -268,6 +273,30 @@ const colors = [
 </WorldLayout>
 
 <script>
+  import { durationMs } from '@/lib/tokens';
+
+  /** plays the fog gate on the real warp layer, holding the full fog for a moment to see it */
+  function initGate() {
+    const btn = document.querySelector<HTMLButtonElement>('[data-test-gate]');
+    if (!btn || btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', () => {
+      const warp = document.getElementById('warp');
+      if (!warp) return;
+      warp.dataset.kind = 'gate';
+      warp.dataset.phase = 'in';
+      setTimeout(
+        () => {
+          warp.dataset.phase = 'out';
+          setTimeout(() => delete warp.dataset.phase, durationMs('--dur-gate-out'));
+        },
+        durationMs('--dur-gate-in') + 400,
+      );
+    });
+  }
+  initGate();
+  document.addEventListener('astro:page-load', initGate);
+
   function init() {
     const btn = document.querySelector<HTMLButtonElement>('[data-test-loader]');
     if (!btn || btn.dataset.bound) return;

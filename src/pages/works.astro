@@ -13,7 +13,6 @@
  * strip stays in view on phones.
  * Facts come from src/content/relics/*.md, labels from src/data/works.ts.
  */
-import { getCollection } from 'astro:content';
 import WorldLayout from '@/layouts/WorldLayout.astro';
 import KeyPrompt from '@/components/ui/KeyPrompt.astro';
 import RelicSlot from '@/components/ui/RelicSlot.astro';
@@ -21,11 +20,10 @@ import RelicPanel from '@/components/relics/RelicPanel.astro';
 import RelicViewer from '@/components/three/RelicViewer.astro';
 import { site, bonfires } from '@/data/site';
 import { works } from '@/data/works';
+import { getRelics } from '@/lib/relics';
 
 const place = bonfires.find((b) => b.id === 'works')!;
-const relics = (await getCollection('relics', ({ data }) => !data.draft)).sort(
-  (a, b) => a.data.order - b.data.order,
-);
+const relics = await getRelics();
 const first = relics.find((r) => r.data.featured) ?? relics[0];
 const emptySlots = Math.min(works.empty.max, Math.max(0, works.empty.fill - relics.length));
 

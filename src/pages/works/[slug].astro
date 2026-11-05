@@ -1,0 +1,607 @@
+---
+/**
+ * /works/<slug> — "The Trial": one relic's case study, told as a boss fight.
+ * Header: the relic on its pedestal, its in-world name with the project's plain name, the summary,
+ * the known facts (role, team, when, stack), its links, and the hackathon it won (`boss`).
+ * Body: the Markdown, split at its H2s into chapters (The Foe → The Arms → The Battle → Victory →
+ * Spoils), each with its plain label beside it. A chapter with nothing written yet is left out of
+ * the production build (in dev it shows as a dashed TODO, so Akrem sees what is missing), and a
+ * frontmatter value still marked TODO is never shown.
+ * Way out: previous / next relic, and `[ESC] Back to the Hall` → /works#<slug> (that relic chosen).
+ * Entering this page passes the fog gate (Warp.astro), not the warp.
+ */
+import { getEntry } from 'astro:content';
+import WorldLayout from '@/layouts/WorldLayout.astro';
+import KeyPrompt from '@/components/ui/KeyPrompt.astro';
+import SectionHead from '@/components/ui/SectionHead.astro';
+import Pedestal from '@/components/relics/Pedestal.astro';
+import Sigil from '@/components/relics/Sigil.astro';
+import { bonfires } from '@/data/site';
+import { works } from '@/data/works';
+import { getRelics, known, relicImage, relicLinks, splitChapters, type Relic } from '@/lib/relics';
+
+export async function getStaticPaths() {
+  const relics = await getRelics();
+  return relics.map((relic, i) => ({
+    params: { slug: relic.id },
+    props: { relic, prev: relics[i - 1], next: relics[i + 1] },
+  }));
+}
+
+interface Props {
+  relic: Relic;
+  prev?: Relic;
+  next?: Relic;
+}
+const { relic, prev, next } = Astro.props;
+const { id, data } = relic;
+const hall = bonfires.find((b) => b.id === 'works')!;
+const t = works.trial;
+const back = `/works#${id}`;
+
+const facts = (
+  [
+    [t.facts.role, known(data.role)],
+    [t.facts.team, known(data.team)],
+    [t.facts.period, known(data.period)],
+  ] as const
+).flatMap(([label, value]) => (value ? [[label, value] as const] : []));
+const links = relicLinks(relic);
+const image = relicImage(relic);
+
+const bossEntry = data.boss ? await getEntry('bosses', data.boss) : undefined;
+const boss = bossEntry && !bossEntry.data.draft ? bossEntry : undefined;
+
+// chapters: the Markdown's H2s, which content.config.ts says must follow works.trial.chapters
+const { intro, chapters } = splitChapters(relic.rendered?.html ?? '');
+const order: string[] = t.chapters.map((c) => c.name);
+const titles = chapters.map((c) => c.title).filter((n) => order.includes(n));
+const unknown = chapters.filter((c) => !order.includes(c.title)).map((c) => c.title);
+if (unknown.length) console.warn(`[trial] ${id}: unknown chapters ${unknown.join(', ')}`);
+if (titles.some((n, i) => i > 0 && order.indexOf(n) < order.indexOf(titles[i - 1]!)))
+  console.warn(`[trial] ${id}: chapters out of order (${titles.join(' → ')})`);
+const dev = import.meta.env.DEV;
+const shown = chapters
+  .filter((c) => !c.empty || dev)
+  .map((c) => ({ ...c, plain: t.chapters.find((k) => k.name === c.title)?.plain }));
+const roman = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X'];
+---
+
+<WorldLayout title={`${data.project}, case study`} description={data.summary}>
+  <KeyPrompt slot="prompts" keys={['ESC']} label={t.back} href={back} />
+
+  <article class="trial" aria-labelledby="trial-title">
+    <header class="head">
+      <p class="crumbs">
+        <a href={back}>{hall.name}</a>
+        <span aria-hidden="true">/</span>
+        <span class="lore">{t.name}</span>
+        <span class="plain">
+          <span class="sr-only">, </span>
+          {t.section}
+        </span>
+      </p>
+
+      <div class="art">
+        <Pedestal>
+          {
+            image ? (
+              <img
+                src={image}
+                alt={`${data.relicName}, the relic of ${data.project}`}
+                decoding="async"
+              />
+            ) : (
+              <Sigil name={data.icon} />
+            )
+          }
+        </Pedestal>
+      </div>
+
+      <div class="plate">
+        <h1 id="trial-title" class="title">
+          <span class="name">{data.relicName}</span>
+          <span class="project">
+            <span class="sr-only">: </span>
+            {data.project}
+          </span>
+        </h1>
+        <p class="summary">{data.summary}</p>
+
+        {
+          facts.length > 0 && (
+            <dl class="facts">
+              {facts.map(([label, value]) => (
+                <div>
+                  <dt>{label}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        }
+
+        {
+          boss && (
+            <p class="boss">
+              <span class="boss-label">{t.vanquished}</span>
+              {t.bossLink ? (
+                <a href={`/victories#${boss.id}`}>{boss.data.bossName}</a>
+              ) : (
+                <span class="boss-name">{boss.data.bossName}</span>
+              )}
+              <span class="boss-plain">
+                {boss.data.placement}, {boss.data.event}
+              </span>
+            </p>
+          )
+        }
+
+        <ul class="chips" aria-label={t.facts.stack}>
+          {data.stack.map((s) => <li>{s}</li>)}
+        </ul>
+
+        {
+          links.length > 0 && (
+            <ul class="links">
+              {links.map((l) => (
+                <li>
+                  <a href={l.href}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+    </header>
+
+    <div class="chapters">
+      {intro && <div class="prose intro" set:html={intro} />}
+      {
+        shown.map((c, i) => (
+          <section class:list={['chapter', { unwritten: c.empty }]} aria-labelledby={c.id}>
+            <span class="numeral" aria-hidden="true">
+              <span>{roman[i]}</span>
+            </span>
+            <SectionHead name={c.title} plain={c.plain} id={c.id} level={2} />
+            {c.empty ? (
+              <p class="todo">TODO(Akrem): nothing written yet. Hidden in the production build.</p>
+            ) : (
+              <div class="prose" set:html={c.html} />
+            )}
+          </section>
+        ))
+      }
+    </div>
+
+    <nav class="trail" aria-label="Other relics">
+      {
+        prev ? (
+          <a class="step prev" href={`/works/${prev.id}`}>
+            <span class="step-dir">← {t.prev}</span>
+            <span class="step-relic">
+              <Sigil name={prev.data.icon} class="step-sigil" />
+              <span class="step-names">
+                <span class="step-name">{prev.data.relicName}</span>
+                <span class="step-plain">{prev.data.project}</span>
+              </span>
+            </span>
+          </a>
+        ) : (
+          <span class="step" />
+        )
+      }
+      <a class="hall" href={back}>{t.back}</a>
+      {
+        next ? (
+          <a class="step next" href={`/works/${next.id}`}>
+            <span class="step-dir">{t.next} →</span>
+            <span class="step-relic">
+              <Sigil name={next.data.icon} class="step-sigil" />
+              <span class="step-names">
+                <span class="step-name">{next.data.relicName}</span>
+                <span class="step-plain">{next.data.project}</span>
+              </span>
+            </span>
+          </a>
+        ) : (
+          <span class="step" />
+        )
+      }
+    </nav>
+  </article>
+</WorldLayout>
+
+<style>
+  .trial {
+    max-width: 58rem;
+    margin: 0 auto;
+  }
+
+  /* ── Header: pedestal left, the plate right (stacked on phones) ── */
+  .head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'crumbs' 'art' 'plate';
+    gap: var(--sp-4) var(--sp-7);
+    margin-bottom: var(--sp-8);
+  }
+  @media (min-width: 760px) {
+    .head {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      grid-template-areas: 'crumbs crumbs' 'art plate';
+      align-items: center;
+    }
+  }
+  .crumbs {
+    grid-area: crumbs;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--sp-2);
+    font-size: var(--fs-16);
+    color: var(--c-text-dim);
+  }
+  .crumbs a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target);
+    font-family: var(--font-display);
+    letter-spacing: var(--tracking-display);
+  }
+  .crumbs .lore {
+    font-family: var(--font-display);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-bone);
+  }
+  .crumbs .plain {
+    font-style: italic;
+  }
+  .art {
+    grid-area: art;
+    width: min(15rem, 70vw);
+    justify-self: center;
+  }
+  .plate {
+    grid-area: plate;
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-4);
+    min-width: 0;
+  }
+  .title {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+  }
+  .name {
+    font-size: clamp(var(--fs-32), 4.6vw, var(--fs-56));
+    color: var(--c-bone);
+    text-shadow: 0 0 28px color-mix(in srgb, var(--c-ember) 18%, transparent);
+  }
+  .project {
+    font-family: var(--font-body);
+    font-size: var(--fs-24);
+    font-style: italic;
+    letter-spacing: 0;
+    color: var(--c-ember);
+  }
+  .summary {
+    max-width: var(--maxw-text);
+    font-size: var(--fs-20);
+    color: var(--c-bone);
+  }
+
+  /* facts: plain label over value, in a row of hairline cells */
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0;
+  }
+  .facts div {
+    display: flex;
+    flex-direction: column;
+    padding: var(--sp-1) var(--sp-5) var(--sp-1) 0;
+  }
+  .facts div + div {
+    padding-left: var(--sp-5);
+    border-left: var(--stroke) solid var(--c-line-strong);
+  }
+  .facts dt {
+    font-size: var(--fs-14);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .facts dd {
+    margin: 0;
+    font-size: var(--fs-18);
+    color: var(--c-bone);
+  }
+
+  .boss {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--sp-3);
+    padding: var(--sp-2) var(--sp-4);
+    border-left: var(--stroke) solid var(--c-ember);
+    background: var(--c-ember-wash);
+  }
+  .boss-label {
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-label);
+    color: var(--c-ember);
+  }
+  .boss-name,
+  .boss a {
+    font-family: var(--font-display);
+    font-size: var(--fs-18);
+    letter-spacing: 0.06em;
+    color: var(--c-bone);
+  }
+  .boss-plain {
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+
+  .chips,
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .chips li {
+    padding: var(--sp-1) var(--sp-3);
+    border: var(--stroke) solid var(--c-line-strong);
+    font-size: var(--fs-16);
+    line-height: var(--lh-snug);
+  }
+  .links {
+    gap: 0 var(--sp-5);
+  }
+  .links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--target);
+  }
+
+  /* ── Chapters ───────────────────────────────────────────────── */
+  .chapters {
+    position: relative;
+    display: grid;
+    gap: var(--sp-8);
+  }
+  /* the thread that ties the chapters, like the Chronicle on /about */
+  .chapters::before {
+    content: '';
+    position: absolute;
+    left: 1.25rem;
+    top: var(--sp-4);
+    bottom: 0;
+    width: var(--stroke);
+    background: linear-gradient(180deg, var(--c-ember), var(--c-line-strong) 20%, transparent);
+  }
+  .chapter {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+    column-gap: var(--sp-5);
+    scroll-margin-top: var(--sp-9);
+  }
+  /* :global: the heading is SectionHead's element, which doesn't carry this page's scope */
+  .chapter > :global(:not(.numeral)) {
+    grid-column: 2;
+  }
+  .numeral {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    color: var(--c-ember);
+  }
+  .numeral::before {
+    content: '';
+    position: absolute;
+    inset: 0.45rem;
+    background: var(--c-void);
+    border: var(--stroke) solid var(--c-ember-deep);
+    transform: rotate(45deg);
+  }
+  .numeral span {
+    position: relative;
+  }
+  .chapter :global(.sh-name) {
+    font-size: clamp(var(--fs-24), 3vw, var(--fs-32));
+  }
+  .chapter :global(.sh-plain) {
+    font-size: var(--fs-18);
+  }
+  .intro {
+    padding-left: calc(2.5rem + var(--sp-5));
+  }
+
+  /* the Markdown itself (set:html, so the selectors reach it with :global) */
+  .prose {
+    max-width: var(--maxw-text);
+    font-size: var(--fs-18);
+  }
+  .prose > :global(* + *) {
+    margin-top: var(--sp-4);
+  }
+  .prose :global(ul),
+  .prose :global(ol) {
+    display: grid;
+    gap: var(--sp-2);
+    margin-bottom: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .prose :global(li) {
+    position: relative;
+    padding-left: var(--sp-5);
+  }
+  .prose :global(ul > li)::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 0.62em;
+    width: 5px;
+    height: 5px;
+    border: var(--stroke) solid var(--c-ember-deep);
+    transform: rotate(45deg);
+  }
+  .prose :global(ol) {
+    counter-reset: step;
+  }
+  .prose :global(ol > li)::before {
+    counter-increment: step;
+    content: counter(step) '.';
+    position: absolute;
+    left: 0;
+    font-variant-numeric: tabular-nums;
+    color: var(--c-ember);
+  }
+  .prose :global(strong) {
+    font-weight: 600;
+    color: var(--c-bone);
+  }
+  .prose :global(h3) {
+    margin-top: var(--sp-6);
+    font-size: var(--fs-20);
+    color: var(--c-bone);
+  }
+  .prose :global(img) {
+    height: auto;
+    border: var(--stroke) solid var(--c-line-strong);
+  }
+  .prose :global(blockquote) {
+    margin-inline: 0;
+    padding-left: var(--sp-4);
+    border-left: var(--stroke) solid var(--c-ember-deep);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+  .prose :global(code) {
+    font-size: 0.9em;
+    color: var(--c-ember);
+  }
+
+  /* dev only: a chapter still waiting for Akrem's words */
+  .unwritten {
+    opacity: 0.6;
+  }
+  .todo {
+    padding: var(--sp-3) var(--sp-4);
+    border: var(--stroke) dashed var(--c-line-strong);
+    font-size: var(--fs-16);
+    font-style: italic;
+    color: var(--c-text-dim);
+  }
+
+  /* ── The way on: previous · back to the Hall · next ─────────── */
+  .trail {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--sp-3);
+    margin-top: var(--sp-9);
+    padding-top: var(--sp-5);
+    border-top: var(--stroke) solid var(--c-line-strong);
+  }
+  @media (min-width: 760px) {
+    .trail {
+      grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+      align-items: center;
+    }
+  }
+  .step {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1);
+    min-width: 0;
+    padding: var(--sp-3);
+    border: var(--stroke) solid transparent;
+    text-decoration: none;
+    color: var(--c-text-dim);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+  .step:empty {
+    display: none;
+  }
+  @media (min-width: 760px) {
+    .step:empty {
+      display: block;
+    }
+    .next {
+      align-items: flex-end;
+      text-align: right;
+    }
+    .next .step-relic {
+      flex-direction: row-reverse;
+    }
+  }
+  a.step:hover,
+  a.step:focus-visible {
+    background: var(--c-ember-wash);
+    border-color: var(--c-line-strong);
+  }
+  .step-dir {
+    font-size: var(--fs-16);
+    font-style: italic;
+  }
+  .step-relic {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3);
+  }
+  .step :global(.step-sigil) {
+    flex: none;
+    width: 2.25rem;
+    height: 2.25rem;
+    color: var(--c-ember);
+  }
+  .step-names {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .step-name {
+    font-family: var(--font-display);
+    font-size: var(--fs-18);
+    letter-spacing: 0.06em;
+    color: var(--c-bone);
+  }
+  .step-plain {
+    font-size: var(--fs-16);
+    font-style: italic;
+  }
+  .hall {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--target);
+    padding: 0 var(--sp-5);
+    border: var(--stroke) solid var(--c-line-strong);
+    font-family: var(--font-display);
+    font-size: var(--fs-16);
+    letter-spacing: var(--tracking-display);
+    color: var(--c-bone);
+    text-decoration: none;
+    justify-self: center;
+  }
+  .hall:hover,
+  .hall:focus-visible {
+    border-color: var(--c-ember);
+  }
+</style>

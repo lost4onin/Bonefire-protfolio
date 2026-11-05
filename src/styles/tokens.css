@@ -83,6 +83,9 @@
   --dur-warp-in: 500ms; /* fade to black */
   --dur-warp-hold: 800ms; /* title card on black (overlaps loading the next page) */
   --dur-warp-out: 600ms; /* new page fades in */
+  /* the fog gate into a Trial (/works/<slug>): in + out under 1s (MILESTONES M6) */
+  --dur-gate-in: 420ms; /* the fog wall rises and fills the view */
+  --dur-gate-out: 480ms; /* you pass through: it parts and thins over the new page */
   --dur-banner: 2000ms; /* "Flame Rekindled" banner; also used as a JS timer */
   --dur-tip: 3500ms; /* loading-screen tip rotation (JS timer) */
   --dur-idle: 5000ms; /* cursor still this long → idle fidget (JS timer) */
@@ -117,5 +120,7 @@
     --dur-warp-in: 75ms;
     --dur-warp-hold: 0ms;
     --dur-warp-out: 75ms;
+    --dur-gate-in: 75ms;
+    --dur-gate-out: 75ms;
   }
 }

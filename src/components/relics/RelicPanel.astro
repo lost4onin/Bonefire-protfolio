@@ -2,40 +2,29 @@
 /**
  * One relic's item description on /works: an ItemPanel filled from a `relics` entry.
  * Plain facts first (project, summary), then the lore, Skill, Scaling (self-assessed), stack,
- * links when there are any, and the way into the Trial (sealed until M6 opens /works/[slug]).
+ * links when there are any, and the way into its Trial (/works/<slug>; `works.trial.open` false
+ * shows it sealed instead).
  * Art: the relic on its pedestal, its `image` if that file exists in public/, else its sigil.
  * When the relic has a `model`, the 3D viewer (RelicViewer) takes over [data-relic-art].
  * Extra attributes (id, hidden, data-*) go on the panel. Used on /works; specimen in /lab.
  */
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
-import type { CollectionEntry } from 'astro:content';
 import ItemPanel from '@/components/ui/ItemPanel.astro';
 import SectionHead from '@/components/ui/SectionHead.astro';
 import RuneButton from '@/components/ui/RuneButton.astro';
 import Pedestal from './Pedestal.astro';
 import Sigil from './Sigil.astro';
 import { works } from '@/data/works';
+import { relicImage, relicLinks, type Relic } from '@/lib/relics';
 
 interface Props {
-  relic: CollectionEntry<'relics'>;
+  relic: Relic;
   class?: string;
   [key: string]: unknown;
 }
 const { relic, class: className, ...rest } = Astro.props;
 const { id, data } = relic;
-
-// public/ is served from the site root. An image named in the frontmatter but not delivered yet
-// falls back to the sigil instead of a broken image.
-const image =
-  data.image && existsSync(join(process.cwd(), 'public', data.image)) ? data.image : undefined;
-if (data.image && !image)
-  console.warn(`[relics] ${id}: ${data.image} is not in public/ yet, showing its sigil`);
-
-const linkKeys = Object.keys(works.links.labels) as (keyof typeof works.links.labels)[];
-const links = linkKeys
-  .filter((k) => data.links[k])
-  .map((k) => ({ href: data.links[k]!, label: works.links.labels[k] }));
+const image = relicImage(relic);
+const links = relicLinks(relic);
 ---
 
 <ItemPanel

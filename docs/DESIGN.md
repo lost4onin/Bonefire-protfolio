@@ -94,6 +94,7 @@ Planned (see MILESTONES.md): `BossCard`, `SkillTile`, `AudioDirector`, `Bard`.
 | Footer rise             | Scroll-linked (the footer's own entry into view)                   | Contents trail `--sp-8` below and fade in, settling exactly at the page end. CSS scroll timeline; none with reduced motion |
 | Header scrim            | Scroll-linked (first `--sp-6` of scroll)                           | Frosted (`--blur-scrim`) `--c-shade` scrim fades in once content can pass under the header; off on pages that don't scroll |
 | Landing still → 3D      | `--dur-fade` twice                                                 | The live canvas fades in under the still, then the still fades out (no dip in the light)                                   |
+| Fog gate (into a Trial) | `--dur-gate-in` 420 · `--dur-gate-out` 480                         | A misty wall rises and fills the view (opaque ash, bone and haze mist), the page swaps behind it, the mist rushes past     |
 | Banner, tips            | `--dur-banner` 2000ms, `--dur-tip` 3500ms                          | JS timers read tokens via `durationMs()` (`src/lib/tokens.ts`), never `parseFloat` (the minifier turns `300ms` into `.3s`) |
 
 - Ambient motion (fog drift, flicker, embers) is slow and continuous. UI motion is quick and purposeful.

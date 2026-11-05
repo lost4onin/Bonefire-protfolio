@@ -20,6 +20,7 @@ Each fact lives in **one** place in code. Pages read from there.
 | Loading tips                                                                  | `src/data/tips.ts`                                           | Loader                                           |
 | Projects + case studies                                                       | `src/content/relics/*.md`                                    | `/works`, `/works/[slug]`, `/cv`                 |
 | `/works` block names + plain labels, scaling note, trial button, "???" slots  | `src/data/works.ts`                                          | `/works`                                         |
+| Trial chapter names + plain labels, fact labels, "Vanquished", way-out labels | `src/data/works.ts` → `trial`                                | `/works/<slug>`                                  |
 | Hackathons                                                                    | `src/content/bosses/*.md`                                    | `/victories`, `/cv`                              |
 
 ## CV facts (verbatim source)
@@ -79,7 +80,8 @@ Track here; tick when done.
 
 For **each** of LUMIO, HIKI, Ember Sentinel:
 
-- [ ] Your exact role, team size, period
+- [ ] Your exact role, team size, period. **Shown since M6 but unconfirmed:** LUMIO `role` "Co-founder, AI and full-stack" and `period` "2025" (my guesses from the starter); replace them or set them to `TODO` to hide them
+- [ ] Confirm or remove LUMIO's "No video leaves the machine" (The Arms, `lumio.md`): a privacy claim, shown since M6
 - [ ] Relic art for the `/works` pedestal: one image of the relic itself, ideally a transparent PNG ≥ 1000px (→ `assets-src/relics/<slug>.png`, then `npm run images`)
 - [ ] 2–4 screenshots, or a short demo video/GIF, for the case study (M6)
 - [ ] Optional: a 3D model of the relic (→ `assets-src/models/`, see ASSETS.md → Relic models)
