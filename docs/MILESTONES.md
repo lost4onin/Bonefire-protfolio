@@ -95,11 +95,11 @@ Spec: PLAN.md §2 · reference `docs/references/ref-item-description-card.png` �
 
 ## M6 — The Trial (`/works/[slug]`) 🧱📄 (Day 8)
 
-- [ ] `getStaticPaths` from `relics`; render the Markdown body with styled H2 sections **The Foe → The Arms → The Battle → Victory → Spoils**
-- [ ] Header: relic name + project + role + team + period + links; "Boss defeated" link if `boss` is set
-- [ ] **Fog-gate transition** when entering from the inventory (a wall of fog that the camera passes through, ≤ 1s)
-- [ ] Prev / next relic navigation; `ESC` back to the Hall
-- [ ] Re-enable project links on `/cv` (see TODO in `cv.astro`)
+- [x] `getStaticPaths` from `relics`; render the Markdown body with styled H2 sections **The Foe → The Arms → The Battle → Victory → Spoils**. Each chapter shows its plain label (`works.trial.chapters`); an empty chapter is left out of the production build (a dashed TODO in dev); the HTML comments (TODO notes) never reach the page; the build warns about unknown or out-of-order chapters
+- [x] Header: relic name + project + role + team + period + links; "Boss defeated" link if `boss` is set. A value still `TODO` is never shown; the boss ("Vanquished · The Drifting Mind · 1st place, …") is plain text until M7 sets `works.trial.bossLink`
+- [x] **Fog-gate transition** when entering from the inventory (a wall of fog that the camera passes through, ≤ 1s). Every way into a Trial uses it (the Hall, previous/next, /cv): 420 + 480ms, in `Warp.astro`; specimen in `/lab`
+- [x] Prev / next relic navigation; `ESC` back to the Hall (`/works#<slug>`, that relic chosen)
+- [x] Re-enable project links on `/cv` (see TODO in `cv.astro`); the `/works` cards open their Trial (`works.trial.open`)
 - [ ] 📄 Akrem fills every `TODO(Akrem)` in `src/content/relics/*.md`
 
 ## M7 — Bosses Vanquished (`/victories`) 🧱🎨📄 (Day 9)

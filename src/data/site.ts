@@ -118,6 +118,10 @@ export const otherPlaces: { href: string; name: string; section: string }[] = [
 ];
 export const lostPlace = { name: 'Lost in the Fog', section: 'Not found' } as const;
 
+/** A relic's case study, /works/<slug>: entered through the fog gate instead of the warp. */
+export const isTrialPath = (pathname: string): boolean =>
+  /^\/works\/[^/]+$/.test(pathname.replace(/\/+$/, ''));
+
 /** Title card for a path: exact match, else the deepest bonfire it lives under (/works/lumio → Hall of Works). */
 export function placeFor(pathname: string): { name: string; section: string } {
   const path = pathname.replace(/\/+$/, '') || '/';

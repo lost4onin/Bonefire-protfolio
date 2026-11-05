@@ -18,13 +18,30 @@ export const works = {
     plain: 'Links',
     labels: { live: 'Live site', repo: 'Source code', demo: 'Demo' },
   },
-  /** the case study at /works/<slug>. TODO(M6): set `open` once /works/[slug] exists */
+  /** the case study at /works/<slug> ("The Trial") and the way into it from a /works card */
   trial: {
-    open: false,
+    open: true, // false: the cards show "The trial is sealed" instead of the button
     action: 'Enter the trial',
     plain: 'Read the case study',
     sealed: 'The trial is sealed',
     sealedPlain: 'Case study coming soon',
+    name: 'The Trial',
+    section: 'Case study',
+    /** the Markdown body's H2s, in this order, each shown with its plain label */
+    chapters: [
+      { name: 'The Foe', plain: 'The problem' },
+      { name: 'The Arms', plain: 'Approach and stack' },
+      { name: 'The Battle', plain: 'Challenges and decisions' },
+      { name: 'Victory', plain: 'Results' },
+      { name: 'Spoils', plain: 'Lessons learned' },
+    ],
+    facts: { role: 'Role', team: 'Team', period: 'When', stack: 'Stack' },
+    /** a hackathon this relic won (its `boss`): in-world label, then the boss and the plain result */
+    vanquished: 'Vanquished',
+    bossLink: false, // TODO(M7): true once /victories exists, to link the boss's card
+    back: 'Back to the Hall',
+    prev: 'Previous relic',
+    next: 'Next relic',
   },
   /** faint "???" slots after the relics, hinting at more to come: up to `fill` slots, at most `max` empty */
   empty: { fill: 6, max: 3, name: '???', plain: 'Yet to be forged' },
