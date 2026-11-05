@@ -16,11 +16,22 @@ import Loader from '@/components/world/Loader.astro';
 import Tabs from '@/components/ui/Tabs.astro';
 import StatList from '@/components/ui/StatList.astro';
 import Radar from '@/components/ui/Radar.astro';
+import RelicSlot from '@/components/ui/RelicSlot.astro';
+import RelicPanel from '@/components/relics/RelicPanel.astro';
+import Pedestal from '@/components/relics/Pedestal.astro';
+import Sigil from '@/components/relics/Sigil.astro';
+import { sigilNames } from '@/components/relics/sigils';
+import { getCollection } from 'astro:content';
 import { cursors } from '@/data/cursor';
 import { bonfires } from '@/data/site';
 import { attributes, radar, scales } from '@/data/pilgrim';
+import { works } from '@/data/works';
 
 if (import.meta.env.PROD) return Astro.redirect('/');
+
+const relics = (await getCollection('relics', ({ data }) => !data.draft)).sort(
+  (a, b) => a.data.order - b.data.order,
+);
 
 const colors = [
   ['--c-void', '#060505', 'page ground'],
@@ -132,6 +143,67 @@ const colors = [
         <p slot="two" class="dim">Second panel. It fades in when chosen.</p>
         <p slot="three" class="dim">Third panel. Without JS all three show, stacked.</p>
       </Tabs>
+    </section>
+
+    <section>
+      <h2 class="label">Relic sigils (slot size · pedestal size; currentColor)</h2>
+      <div class="row tight">
+        {
+          sigilNames.map((n) => (
+            <figure class="sigil-spec">
+              <div class="row tight bottom">
+                <Sigil name={n} class="sigil-s" />
+                <Sigil name={n} class="sigil-l" />
+              </div>
+              <figcaption>
+                <code>{n}</code>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Pedestal (a relic's art until its image or model exists)</h2>
+      <div class="row">
+        {
+          relics.map((r) => (
+            <div class="pedestal-spec">
+              <Pedestal>
+                <Sigil name={r.data.icon} />
+              </Pedestal>
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Relic slots (idle · selected · empty)</h2>
+      <div class="slot-spec" role="tablist" aria-label="Specimen slots">
+        {
+          relics
+            .slice(0, 2)
+            .map((r, i) => (
+              <RelicSlot
+                href="#relic-slots"
+                name={r.data.relicName}
+                plain={r.data.project}
+                icon={r.data.icon}
+                role="tab"
+                aria-selected={i === 1 ? 'true' : 'false'}
+              />
+            ))
+        }
+        <RelicSlot empty name={works.empty.name} plain={works.empty.plain} />
+      </div>
+    </section>
+
+    <section>
+      <h2 class="label">Item panel (wide: art beside the text · narrow: stacked like the card)</h2>
+      {relics[0] && <RelicPanel relic={relics[0]} />}
+      <div class="panel-narrow">{relics[1] && <RelicPanel relic={relics[1]} />}</div>
     </section>
 
     <section>
@@ -301,6 +373,27 @@ const colors = [
   }
   .stats dd {
     margin: 0;
+  }
+  .sigil-spec .sigil-s {
+    width: 40px;
+    height: 40px;
+  }
+  .sigil-spec .sigil-l {
+    width: 96px;
+    height: 96px;
+    color: var(--c-ember);
+  }
+  .pedestal-spec {
+    width: 260px;
+  }
+  .slot-spec {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2);
+    max-width: 22rem;
+  }
+  .panel-narrow {
+    max-width: 26rem;
   }
   .titlecard-stage {
     display: grid;

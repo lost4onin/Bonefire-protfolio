@@ -23,9 +23,9 @@ export default defineConfig({
       // three.js is big; keep it in its own chunk so 2D pages never load it
       rollupOptions: {
         output: {
-          manualChunks: {
-            three: ['three'],
-          },
+          // by module path: in the object form, Rollup folded our own small three-dependent modules
+          // (components/three/palette.ts) into this chunk and named it after them
+          manualChunks: (id) => (id.includes('/node_modules/three/') ? 'three' : undefined),
         },
       },
     },

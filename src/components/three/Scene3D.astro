@@ -15,37 +15,10 @@
 
 <script>
   import { pickMode } from './sceneQuality';
+  import { afterContentPaint } from './afterPaint';
   import type { BonfireScene } from './BonfireScene';
 
   let scene: BonfireScene | null = null;
-
-  /**
-   * Wait until the page's own content has painted WITH its fonts (the text is the LCP), then an
-   * idle slice, so the 3D chunk and model never compete with the content for bandwidth or CPU.
-   */
-  const afterContentPaint = async () => {
-    if (document.readyState !== 'complete')
-      await new Promise((r) => addEventListener('load', r, { once: true }));
-    await document.fonts.ready;
-    // the browser's own Largest Contentful Paint entry (buffered: already there after a page swap)
-    await new Promise<void>((resolve) => {
-      if (!PerformanceObserver.supportedEntryTypes?.includes('largest-contentful-paint'))
-        return resolve();
-      const cap = setTimeout(resolve, 3000);
-      const po = new PerformanceObserver(() => {
-        po.disconnect();
-        clearTimeout(cap);
-        resolve();
-      });
-      po.observe({ type: 'largest-contentful-paint', buffered: true });
-    });
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
-    await new Promise<void>((resolve) =>
-      'requestIdleCallback' in window
-        ? requestIdleCallback(() => resolve(), { timeout: 1500 })
-        : setTimeout(resolve, 200),
-    );
-  };
 
   /** Scene3D's script runs before Loader's (it is earlier in the page), so wait for the API. */
   const loaderReady = () =>

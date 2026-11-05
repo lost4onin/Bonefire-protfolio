@@ -8,6 +8,7 @@
  */
 import { defineCollection, z } from 'astro:content';
 import { glob } from 'astro/loaders';
+import { sigilNames } from '@/components/relics/sigils';
 
 const relics = defineCollection({
   loader: glob({ pattern: '**/*.md', base: './src/content/relics' }),
@@ -31,8 +32,9 @@ const relics = defineCollection({
     lore: z.string(), // 2–4 lines, item-description voice
     skill: z.object({ name: z.string(), text: z.string() }), // key feature, "Skill:" line
     scaling: z.array(z.object({ attr: z.string(), grade: z.enum(['S', 'A', 'B', 'C', 'D', 'E']) })),
-    // media
-    image: z.string().optional(), // /images/relics/<slug>.webp
+    // media. The /works panel shows the model if set, else the image if the file exists, else the icon
+    icon: z.enum(sigilNames).default('shard'), // etched sigil on the slot (components/relics/sigils.ts)
+    image: z.string().optional(), // /images/relics/<slug>.webp: the relic itself (art or render)
     model: z.string().optional(), // /models/<slug>.glb (optional 3D relic)
     order: z.number().int(),
     featured: z.boolean().default(false),

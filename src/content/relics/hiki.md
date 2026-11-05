@@ -17,6 +17,7 @@ scaling:
   - { attr: Web, grade: A }
   - { attr: Databases, grade: B }
   - { attr: APIs, grade: B }
+icon: compass
 image: /images/relics/hiki.webp
 order: 2
 featured: false

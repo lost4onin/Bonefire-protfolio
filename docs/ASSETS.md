@@ -6,6 +6,7 @@ assets-src/          raw sources, never served, committed (big binaries via Git 
   models/            .glb / .gltf drops (+ .blend / .fbx sources)
   bosses/            boss card art (raw)
   rings/             Armoury ring art (raw)
+  relics/            relic art (raw), named by the relic's slug: lumio.png, hiki.jpg… (/works pedestal)
   cursor/            gauntlet cursor pack (.cur / .ani)
   audio/             raw recordings / downloads before trimming
 public/              served as-is
@@ -66,6 +67,10 @@ Not delivered yet. Build placeholders that these can replace without rework.
 | Bonfire scene props | `/` (M3)                 | **Delivered 2026-10-28**: `public/models/bonfire.glb` (see below). Flames and sparks are added in code |
 | Relics (items)      | `/works` (M5)            | GLB through `npm run models`, ≤ 600 KB / ≤ 20k triangles each                                          |
 
+### Relic models (`/works`)
+
+None delivered yet; the viewer is built and waiting. For each relic: `npm run models -- <file> --name <slug>` (texture size 1024 at most), then `model: /models/<slug>.glb` in `src/content/relics/<slug>.md`. That's all: `RelicScene.ts` loads it with meshopt, scales it to 1 m (height or width, whichever is larger), centres it, stands it on its own stone pedestal under one ember light and turns it. Keep +Y up; the pivot doesn't matter. If the file fails to load, a procedural shard stands in. Test the viewer without a model: `/works?quality=high`.
+
 ### Landing bonfire (`public/models/bonfire.glb`)
 
 From `assets-src/models/dark_souls_-_bonfire.glb`: `npm run models -- dark_souls_-_bonfire --name bonfire --texture-size 512 --drop-material boden`.
@@ -85,7 +90,8 @@ Shown to visitors on `/credits` (`src/data/credits.ts`).
 - Portrait: `scripts/portrait_grade.py` (instructions in the file header). Web version `public/images/pilgrim-portrait.webp` (≈70 KB, 910×1400, transparent).
 - Landing still: `public/images/bonfire-still.webp` (≈15 KB, 1056×945) is one frame of the live 3D scene, shown in the hearth while the 3D loads, for good without 3D, and small on the loading screen. **`npm run still`** (`scripts/capture-still.mjs`, needs `npm run dev` or `preview` running) renders `/?quality=high` in the installed Chrome over the DevTools protocol, hides everything but the canvas, crops the `[data-still]` box from `index.astro` and encodes WebP with sharp. Re-run after any change to the landing scene (model, fire, ruins, palette) and copy the printed size into `bonfireStill` in `src/data/site.ts`. It shows the CC BY bonfire model, already credited on `/credits`.
 - Relic and boss art: `.webp`, ≤ 1600px wide, ≤ 200 KB each. Use Astro `<Image />` for anything not already optimised.
-- **`npm run images`** (`scripts/optimize-images.mjs`, sharp): processes the `JOBS` manifest at the top of the script. Presets `boss` (≤ 1200px wide, ≤ 200 KB WebP), `ring` (256×256 WebP + @2x when the source is big enough), `cursor` (reads `.cur`/`.ani`, trims, 32×32 + @2x PNG, writes hotspots to `src/data/cursor.ts`). Never upscales, strips metadata, skips existing outputs unless `--force`. Filter: `npm run images -- rings`.
+- **`npm run images`** (`scripts/optimize-images.mjs`, sharp): processes the `JOBS` manifest at the top of the script. Presets `boss` (≤ 1200px wide, ≤ 200 KB WebP), `ring` (256×256 WebP + @2x when the source is big enough), `cursor` (reads `.cur`/`.ani`, trims, 32×32 + @2x PNG, writes hotspots to `src/data/cursor.ts`), `relic` (within 1000×1000, ≤ 200 KB WebP, transparency kept). Never upscales, strips metadata, skips existing outputs unless `--force`. Filter: `npm run images -- rings`.
+- Relic art (Akrem, 2026-10-31): the relic itself (an illustration or a render of its model), ideally on a transparent background; project screenshots belong to the M6 case study. Drop it in `assets-src/relics/` named by the relic's slug (`lumio.png`): `npm run images` finds it without a manifest entry and writes `public/images/relics/<slug>.webp`, the path the relic's `image:` already names. The `/works` card shows it on the pedestal as soon as the file exists; until then it shows the relic's etched sigil (and the build prints a warning).
 - Boss art is named after what it shows (`yhorm.webp`), not the hackathon; the mapping lives in each `src/content/bosses/*.md` `image:` field. Current: GAICA → `abyss-watchers`, KILANI → `yhorm`, Sight Day → `dancer`, leanX → `vordt`; `lothric` spare. Several sources are small (Vordt 300px, Lothric 240px, Dancer 512px), so expect soft cards until better art arrives.
 - Rings: `leadership` ← Knight's Ring, `coordination` ← Hornet Ring, `analysis` ← Hawk Ring. Sources are ~200×240, so only the 256px size exists (no @2x).
 

@@ -1,0 +1,45 @@
+---
+/**
+ * One etched relic sigil (paths in sigils.ts), stroked in currentColor at a constant 1.5px whatever
+ * its size. Decorative: the relic's name is always written beside it.
+ * Used by RelicSlot (small) and on the Pedestal (large) until a relic has real art.
+ */
+import { sigils, type SigilName, type SigilArt } from './sigils';
+
+interface Props {
+  name: SigilName;
+  class?: string;
+  [key: string]: unknown; // forwards the parent's scope attribute so its styles reach the svg
+}
+const { name, class: className, ...rest } = Astro.props;
+const art: SigilArt = sigils[name];
+---
+
+<svg
+  class:list={['sigil', className]}
+  viewBox="0 0 64 64"
+  aria-hidden="true"
+  focusable="false"
+  {...rest}
+>
+  {art.lines.map((d) => <path d={d} />)}
+  {art.hatch?.map((d) => <path class="hatch" d={d} />)}
+</svg>
+
+<style>
+  .sigil {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    overflow: visible;
+  }
+  .sigil path {
+    vector-effect: non-scaling-stroke;
+  }
+  .sigil .hatch {
+    stroke-width: 1;
+    opacity: 0.65;
+  }
+</style>
