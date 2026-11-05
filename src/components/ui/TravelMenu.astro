@@ -9,6 +9,7 @@
  * Phones: the dialog becomes a bottom sheet.
  */
 import { bonfires } from '@/data/site';
+import { cleanPath } from '@/lib/paths';
 import TextBox from './TextBox.astro';
 import KeyPrompt from './KeyPrompt.astro';
 
@@ -19,7 +20,7 @@ interface Props {
   class?: string;
 }
 const { variant = 'inline', current = Astro.url.pathname, class: className } = Astro.props;
-const here = current.replace(/\/+$/, '') || '/';
+const here = cleanPath(current); // built pages see /about.html here, visitors /about
 const isHere = (href: string) =>
   href === '/' ? here === '/' : here === href || here.startsWith(href + '/');
 const headingId = variant === 'modal' ? 'travel-dialog-title' : 'travel-inline-title';
