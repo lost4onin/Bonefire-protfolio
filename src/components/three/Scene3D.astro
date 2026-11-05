@@ -7,7 +7,11 @@
  * The still of this fire inside [data-hearth] covers the wait: on the first 3D frame the canvas fades
  * in under it, then it fades away (hearth[data-live]). It stays for good on '2d' = no 3D (no WebGL,
  * reduced motion, Save-Data, weak phone).
- * Disposed on astro:before-swap. Debug: /?quality=high|low|2d.
+ * Leaving the landing parks a live scene instead of disposing it: it stops drawing and waits, its
+ * canvas detached, for PARK_MS. Coming back within that time puts the same canvas into the new page
+ * right after the swap, so the fire is already burning as the page fades in (rebuilding it took
+ * ~1s every visit: context, model, textures, shaders). After PARK_MS away it is disposed.
+ * Debug: /?quality=high|low|2d.
  */
 ---
 
@@ -18,7 +22,12 @@
   import { afterContentPaint } from './afterPaint';
   import type { BonfireScene } from './BonfireScene';
 
+  const PARK_MS = 3 * 60_000; // GPU memory is held this long for a quick return, then freed
+
   let scene: BonfireScene | null = null;
+  let parked: { canvas: HTMLCanvasElement; quality: string | null; timer: number } | null = null;
+  let incoming: URL | null = null; // the page being swapped in (location isn't updated yet then)
+  const quality = (url: URL) => url.searchParams.get('quality');
 
   /** Scene3D's script runs before Loader's (it is earlier in the page), so wait for the API. */
   const loaderReady = () =>
@@ -36,8 +45,32 @@
     });
 
   function teardown() {
+    clearTimeout(parked?.timer);
+    parked = null;
     scene?.dispose();
     scene = null;
+  }
+
+  /** Leaving the landing (astro:before-swap): a live scene goes to sleep, anything else is freed. */
+  function park(from: URL) {
+    if (parked) return; // already asleep: leaving one other page for another
+    const canvas = document.getElementById('scene3d') as HTMLCanvasElement | null;
+    if (!scene || !canvas?.dataset.live) return teardown();
+    scene.park();
+    parked = { canvas, quality: quality(from), timer: window.setTimeout(teardown, PARK_MS) };
+  }
+
+  /** Back on the landing (astro:after-swap, before the page fades in): wake the sleeping scene. */
+  function unpark(to: URL | null) {
+    const fresh = document.getElementById('scene3d');
+    if (!parked || !scene || !fresh || !to) return;
+    if (quality(to) !== parked.quality) return teardown(); // ?quality= asks for another mode: rebuild
+    clearTimeout(parked.timer);
+    fresh.replaceWith(parked.canvas); // already booted and live: boot() leaves it alone
+    parked = null;
+    const hearth = document.querySelector<HTMLElement>('[data-hearth]');
+    if (hearth) hearth.dataset.live = '1';
+    scene.wake(hearth);
   }
 
   async function boot() {
@@ -55,7 +88,9 @@
       teardown();
       canvas.dataset.mode = '2d';
       delete canvas.dataset.live;
-      if (hearth) delete hearth.dataset.live;
+      // the hearth of the page showing now (the scene may have been parked and woken since boot)
+      const current = document.querySelector<HTMLElement>('[data-hearth]');
+      if (current) delete current.dataset.live;
     };
 
     // the deliberate wait for the content's paint is not loading: start counting only after it
@@ -92,7 +127,11 @@
 
   boot();
   document.addEventListener('astro:page-load', boot);
-  document.addEventListener('astro:before-swap', teardown);
+  document.addEventListener('astro:before-swap', (e) => {
+    incoming = e.to;
+    park(e.from);
+  });
+  document.addEventListener('astro:after-swap', () => unpark(incoming));
 </script>
 
 <style>

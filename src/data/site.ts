@@ -86,6 +86,9 @@ export const bonfires: Bonfire[] = [
   },
 ];
 
+/** A bonfire whose page isn't built yet: the Travel menu lists it, but not as a link. */
+export const unlit = { lore: 'Not yet lit', plain: 'Coming soon' } as const;
+
 export const recruiterRoute = { href: '/cv', label: 'Skip the journey' } as const;
 
 /** Landing intro (M2). Plays once per visitor, then the Travel menu. */

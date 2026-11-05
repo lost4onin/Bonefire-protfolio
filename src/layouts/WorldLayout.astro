@@ -42,9 +42,11 @@ const { title, description, fog = 'normal', noindex, quietChrome = false } = Ast
 
   <div class="world">
     <header class:list={['chrome', 'top', { quiet: quietChrome }]}>
-      <a class="id" href="/" aria-label={`${site.name}, home`}>
+      <!-- the visible text stays in the link's name (voice control says what it sees) -->
+      <a class="id" href="/">
         <span class="id-name">{site.name}</span>
         <span class="id-role">{site.role}</span>
+        <span class="sr-only">, home</span>
       </a>
       <nav aria-label="Shortcuts" class="shortcuts">
         <button

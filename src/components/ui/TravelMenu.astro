@@ -7,8 +7,11 @@
  * Keyboard: ↑/↓ (and Home/End) move between places, Enter goes, ESC closes the dialog.
  * The native dialog gives the focus trap and ESC; focus goes back to whatever opened it.
  * Phones: the dialog becomes a bottom sheet.
+ * A bonfire whose page doesn't exist yet is unlit: listed (with "Not yet lit · Coming soon"), not a
+ * link, skipped by the arrow keys. It lights up by itself once its page file is in src/pages/.
  */
-import { bonfires } from '@/data/site';
+import { bonfires, unlit } from '@/data/site';
+import { cleanPath } from '@/lib/paths';
 import TextBox from './TextBox.astro';
 import KeyPrompt from './KeyPrompt.astro';
 
@@ -19,9 +22,16 @@ interface Props {
   class?: string;
 }
 const { variant = 'inline', current = Astro.url.pathname, class: className } = Astro.props;
-const here = current.replace(/\/+$/, '') || '/';
+const here = cleanPath(current); // built pages see /about.html here, visitors /about
 const isHere = (href: string) =>
   href === '/' ? here === '/' : here === href || here.startsWith(href + '/');
+// routes that have a page (src/pages/about.astro → /about), so the menu never links to a 404
+const routes = new Set(
+  Object.keys(import.meta.glob('/src/pages/**/*.{astro,md,mdx}')).map((file) =>
+    cleanPath(file.replace(/^\/src\/pages/, '').replace(/\.(astro|mdx?)$/, '')),
+  ),
+);
+const isLit = (href: string) => routes.has(href);
 const headingId = variant === 'modal' ? 'travel-dialog-title' : 'travel-inline-title';
 ---
 
@@ -41,20 +51,35 @@ const headingId = variant === 'modal' ? 'travel-dialog-title' : 'travel-inline-t
         <ul class="list" data-travel-list>
           {bonfires.map((b) => (
             <li>
-              <a href={b.href} aria-current={isHere(b.href) ? 'page' : undefined}>
-                <span class="row">
-                  <span class="name">{b.name}</span>
-                  <span class="section">{b.section}</span>
+              {isLit(b.href) ? (
+                <a href={b.href} aria-current={isHere(b.href) ? 'page' : undefined}>
+                  <span class="row">
+                    <span class="name">{b.name}</span>
+                    <span class="section">{b.section}</span>
+                  </span>
+                  <span class="lore">{isHere(b.href) ? 'You are here.' : b.lore}</span>
+                </a>
+              ) : (
+                <span class="unlit">
+                  <span class="row">
+                    <span class="name">{b.name}</span>
+                    <span class="section">{b.section}</span>
+                  </span>
+                  <span class="lore">{`${unlit.lore} · ${unlit.plain}`}</span>
                 </span>
-                <span class="lore">{isHere(b.href) ? 'You are here.' : b.lore}</span>
-              </a>
+              )}
             </li>
           ))}
         </ul>
       </TextBox>
     </dialog>
   ) : (
-    <TextBox as="nav" width="sm" aria-labelledby={headingId} class:list={['travel-box', className]}>
+    <TextBox
+      as="nav"
+      width="sm"
+      aria-labelledby={headingId}
+      class:list={['travel-box', 'inline', className]}
+    >
       <div class="head">
         <h2 id={headingId} class="title">
           Travel
@@ -65,13 +90,26 @@ const headingId = variant === 'modal' ? 'travel-dialog-title' : 'travel-inline-t
           .filter((b) => !isHere(b.href))
           .map((b) => (
             <li>
-              <a href={b.href}>
-                <span class="row">
-                  <span class="name">{b.name}</span>
-                  <span class="section">{b.section}</span>
+              {isLit(b.href) ? (
+                <a href={b.href}>
+                  <span class="row">
+                    <span class="name">{b.name}</span>
+                    <span class="section">{b.section}</span>
+                  </span>
+                  <span class="lore">{b.lore}</span>
+                </a>
+              ) : (
+                <span class="unlit">
+                  <span class="row">
+                    <span class="name">{b.name}</span>
+                    <span class="section">
+                      {b.section}
+                      <span class="soon">{` · ${unlit.plain}`}</span>
+                    </span>
+                  </span>
+                  <span class="lore">{`${unlit.lore} · ${unlit.plain}`}</span>
                 </span>
-                <span class="lore">{b.lore}</span>
-              </a>
+              )}
             </li>
           ))}
       </ul>
@@ -208,7 +246,8 @@ const headingId = variant === 'modal' ? 'travel-dialog-title' : 'travel-inline-t
     margin: 0;
     padding: 0;
   }
-  .list a {
+  .list a,
+  .unlit {
     display: flex;
     flex-direction: column;
     gap: var(--sp-1);
@@ -218,6 +257,31 @@ const headingId = variant === 'modal' ? 'travel-dialog-title' : 'travel-inline-t
     color: var(--c-bone);
     text-decoration: none;
     transition: background var(--dur-fast) var(--ease-out);
+  }
+  /* not built yet: quieter, no hover, nothing to click */
+  .unlit {
+    color: var(--c-text-dim);
+    cursor: default;
+  }
+  .soon {
+    display: none;
+  }
+  /* short desktop screens (most laptops): the landing's menu drops its lore lines so every place
+     fits under the fire without scrolling (index.astro shrinks the fire to match). Name and plain
+     label stay; an unlit place says "coming soon" beside its label instead */
+  @media (min-width: 721px) and (max-height: 940px) {
+    .inline .lore {
+      display: none;
+    }
+    .inline .soon {
+      display: inline;
+    }
+    .inline .list a,
+    .inline .unlit {
+      justify-content: center;
+      min-height: var(--target);
+      padding-block: var(--sp-2);
+    }
   }
   .list a:hover,
   .list a:focus-visible {

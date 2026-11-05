@@ -173,3 +173,20 @@ The canvas fills the screen behind the page; the camera distance and a view offs
 - **The boss line is plain text until M7** (`works.trial.bossLink`), so it never links to a page that doesn't exist; the fact (1st place, event) shows either way.
 - **`/cv` links each project to its Trial**; `works.trial.open` turns the `/works` buttons and these links off together if the trials ever need to close again.
 - **Shared relic helpers** (`getRelics`, `relicImage`, `relicLinks`, `known`, `splitChapters`) replace the copies in `/works`, `/cv`, `/lab` and `RelicPanel`, so every page agrees on order, art and what counts as missing.
+
+### 2026-11-05: The landing's 3D bonfire is parked between visits, not rebuilt
+
+Akrem: "the fire and bonfire take time to load each time I enter the landing page." Measured on the production build (real GPU): coming back to `/` through Travel, the live fire appeared ~1.0–1.15 s after the page swap, every time, because the scene was disposed on leaving and rebuilt on return (WebGL context, model parse, texture uploads, shader compiles; the files themselves came from the cache). Now leaving the landing **parks** a live scene: it stops drawing (and stays stopped even if the tab is shown again) with its canvas detached; coming back puts that canvas into the new page at `astro:after-swap`, before the page fades in, so the fire is already burning: 0–1 ms after the swap. A parked scene is disposed after 3 minutes away (GPU memory), or at once if the return asks for another `?quality=`. Exception to the "dispose on `astro:before-swap`" rule in CLAUDE.md, which now says so. Rejected: caching only the parsed model (textures and shaders would still be re-uploaded and recompiled) and persisting the canvas on every page with `transition:persist` (a full-screen WebGL canvas on pages that don't use it).
+
+### 2026-11-05: UI/UX pass after M6 (Akrem: "find UI/UX problems and fix them, each in a commit")
+
+Every route screenshotted on the production build (1440×900, 390×844, then 1280×720 to 1920×1040 for the landing), Lighthouse 12 on the pages not measured before, a keyboard focus check. Found and fixed, one commit each:
+
+- **Landing 3D rebuilt on every return** (~1 s of still before the live fire): parked between visits, see the entry above.
+- **Canonical and `og:url` pointed at `/about.html`** (Astro.url ends in `.html` with `build.format: 'file'`; Vercel redirects that to `/about`). `src/lib/paths.ts` → `cleanPath()`.
+- **"You are here" in the Travel dialog never showed in production** (same cause; worked in dev). Also `cleanPath()`.
+- **Travel linked to three pages that don't exist yet** (`/victories`, `/armoury`, `/contact` → 404). A place is now _unlit_ ("Not yet lit · Coming soon", not a link, skipped by the arrow keys) unless a page file exists for its route, checked at build with `import.meta.glob`, so each one lights up by itself when its milestone adds the page. Rejected: a hand-kept `lit` flag in `site.ts` (easy to forget, and it would drift).
+- **The landing's Travel menu ran past the fold on laptops** (2–3 of 5 places hidden at 1366×768 and 1280×720). For desktop viewports ≤ 940px tall: the hearth scales with height (`min(15rem, 26dvh)`), gaps tighten, and the menu rows drop their lore line (name and plain label stay). Rejected: a two-column menu (breaks the fire-above-menu composition) and hiding unlit places (visitors should see what's coming).
+- **Header name link's `aria-label` hid its visible text** (WCAG 2.5.3, label in name). Visible text + `sr-only` ", home".
+
+Checked and fine: `/about`, `/works`, the trial pages, `/cv`, `/credits` and the 404 on desktop and phone; no console errors anywhere; Lighthouse `/works/lumio` 95–96 / 100 / 100 / 100, `/cv` and `/credits` 100 across; focus rings on every new interactive element. Lighthouse can't score the 404 (it refuses pages answering 404), by design.

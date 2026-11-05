@@ -5,7 +5,8 @@
  * page scrolls. Motion: slow camera breathing + pointer parallax (desktop only); the fire stays pinned.
  * Quality: starts at the tier from sceneQuality.ts, FPS-probes the first ~2s and steps down
  * (high → low → onFallback = back to the still). Pauses when the tab is hidden.
- * Lifecycle: dispose() frees every GPU resource; Scene3D calls it on astro:before-swap.
+ * Lifecycle: park() / wake() when the visitor leaves and comes back (Scene3D keeps a live scene a
+ * few minutes); dispose() frees every GPU resource.
  * Main thread: heavy GPU work is spread out (async shader compile, one texture upload per idle
  * slice, shadow map rendered once) so Lighthouse's Total Blocking Time stays low.
  */
@@ -70,6 +71,7 @@ export class BonfireScene {
   private target = new Vector3(0, 0.8, 0);
   private raf = 0;
   private running = false;
+  private parked = false;
   private disposed = false;
   private size = new Vector2();
   private anchorRect: DOMRect | null = null;
@@ -198,7 +200,7 @@ export class BonfireScene {
   }
 
   start(): void {
-    if (this.running || this.disposed || document.hidden || !this.fire) return;
+    if (this.running || this.parked || this.disposed || document.hidden || !this.fire) return;
     this.running = true;
     this.clock.start();
     const loop = () => {
@@ -213,6 +215,20 @@ export class BonfireScene {
     this.running = false;
     this.clock.stop();
     cancelAnimationFrame(this.raf);
+  }
+
+  /** The visitor left the landing: stop drawing, and stay asleep (even if the tab shows) until wake(). */
+  park(): void {
+    this.parked = true;
+    this.stop();
+  }
+
+  /** Back on the landing, its canvas in the new page: frame the new hearth and draw again. */
+  wake(anchor: HTMLElement | null): void {
+    this.anchor = anchor;
+    this.parked = false;
+    this.resize();
+    this.start();
   }
 
   dispose(): void {
